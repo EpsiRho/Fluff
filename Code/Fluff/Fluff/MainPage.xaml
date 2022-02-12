@@ -1,0 +1,110 @@
+﻿<Page
+    x:Class="Fluff.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Fluff"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    Background="Transparent"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="70*"/>
+        </Grid.RowDefinitions>
+        <Grid>
+            <CommandBar Background="Transparent" 
+                        IsOpen="False" 
+                        Margin="0,0,0,0"
+                        DefaultLabelPosition="Right"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom">
+                <AppBarButton Click="BackButton_Click">
+                    <AppBarButton.Icon>
+                        <SymbolIcon Symbol="Back" Margin="0,0,-10,0"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Icon="Pictures" Label="Posts"/>
+                <AppBarButton Icon="List" Label="Pools"/>
+                <AppBarButton Icon="View" Label="Wiki"/>
+                <AppBarButton Icon="Upload" Label="Upload"/>
+            </CommandBar>
+            <CommandBar Background="Transparent" 
+                        IsOpen="False" 
+                        Margin="0,0,0,0"
+                        DefaultLabelPosition="Right"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom">
+                <AppBarButton x:Name="SettingsButton"
+                              Click="SettingsButton_Click">
+                    <AppBarButton.Icon>
+                        <SymbolIcon Symbol="Setting" Margin="0,0,-10,0"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+            </CommandBar>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Frame x:Name="contentFrame"/>
+        </Grid>
+
+        <ContentDialog x:Name="SettingsDialog"
+                       Title="Settings"
+                       PrimaryButtonText="Save"
+                       DefaultButton="Primary"
+                       SecondaryButtonText="Close">
+            <Grid>
+                <TextBlock Text="Fluff 0.2"
+                           HorizontalAlignment="Left"
+                           Margin="1,-15,0,0"
+                           VerticalAlignment="Top"/>
+                <ScrollViewer Margin="0,10,0,0">
+                    <StackPanel>
+                        <muxc:Expander HorizontalAlignment="Stretch">
+                            <muxc:Expander.Header>
+                                <TextBlock Text="App Settings" FontSize="18"/>
+                            </muxc:Expander.Header>
+                            <StackPanel HorizontalAlignment="Left" Width="350">
+                                <TextBlock Text="Highest Rating allowed" Margin="10,0,10,0" FontSize="16"/>
+                                <ComboBox x:Name="RatingSelection" Width="220" VerticalAlignment="Top"  FontSize="14"
+                                          HorizontalAlignment="Left" Margin="10,10,0,0">
+                                    <x:String>rating:safe</x:String>
+                                    <x:String>rating:questionable</x:String>
+                                    <x:String>rating:explicit</x:String>
+                                </ComboBox>
+                                <TextBlock Text="Post Count" Margin="10,0,10,0" FontSize="16"/>
+                                <Slider x:Name="PostCountSlider" Margin="10,0,10,0" Maximum="300" Minimum="25" StepFrequency="5" Value="75" Width="200" HorizontalAlignment="Left"/>
+                                <TextBlock Text="Show Comments" Margin="10,0,10,0" FontSize="16"/>
+                                <ToggleSwitch x:Name="CommentSwitch" Margin="10,0,0,0"/>
+                                <TextBlock Text="Mute Videos By Default" Margin="10,0,10,0" FontSize="16"/>
+                                <ToggleSwitch x:Name="VolumeSwitch" Margin="10,0,0,0"/>
+                            </StackPanel>
+                        </muxc:Expander>
+                        <muxc:Expander HorizontalAlignment="Stretch">
+                            <muxc:Expander.Header>
+                                <TextBlock Text="Login" FontSize="18"/>
+                            </muxc:Expander.Header>
+
+                        </muxc:Expander>
+                        <muxc:Expander HorizontalAlignment="Stretch">
+                            <muxc:Expander.Header>
+                                <TextBlock Text="Experimental Settings" FontSize="18"/>
+                            </muxc:Expander.Header>
+
+                        </muxc:Expander>
+                        <muxc:Expander HorizontalAlignment="Stretch">
+                            <muxc:Expander.Header>
+                                <TextBlock Text="About" FontSize="18"/>
+                            </muxc:Expander.Header>
+                            <TextBlock>
+                                Fluff by <Hyperlink NavigateUri="https://epsirho.github.io/">EpsiRho</Hyperlink>
+                            </TextBlock>
+                        </muxc:Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </ContentDialog>
+    </Grid>
+</Page>
