@@ -306,7 +306,7 @@
                        PrimaryButtonClick="SettingsDialog_PrimaryButtonClick"
                        SecondaryButtonText="Close">
             <Grid  MinWidth="400">
-                <TextBlock Text="Fluff 0.3"
+                <TextBlock Text="Fluff 0.4"
                            HorizontalAlignment="Left"
                            Margin="1,-15,0,0"
                            VerticalAlignment="Top"/>
@@ -357,15 +357,36 @@
                                                       Visibility="Collapsed"
                                                       IsIndeterminate="True"/>
                                 </StackPanel>
+                                
                                 <StackPanel x:Name="LoggedInPanel"
                                             Visibility="Collapsed">
-                                    <TextBlock Margin="10,0,10,0" 
-                                               FontSize="16">
-                                        Username: <Run x:Name="UsernameSet"/>
+                                    <TextBlock Margin="10,0,10,5" 
+                                               HorizontalAlignment="Center"
+                                               FontSize="20">
+                                        Logged in as: <Run x:Name="UsernameSet"/>
                                     </TextBlock>
-                                    <Button x:Name="LogoutButton"
-                                            Click="LogoutButton_Click"
-                                            Content="Logout"/>
+                                    <TextBlock Margin="10,10,10,0" 
+                                               HorizontalAlignment="Center"
+                                               Text="Blacklist:"
+                                               FontSize="18"/>
+                                    <TextBox Margin="0,5,0,10"
+                                             AcceptsReturn="True"
+                                             x:Name="BlacklistBox"
+                                             Height="200"
+                                             Width="300"/>
+                                    <muxc:ProgressBar x:Name="BlacklistProgress"
+                                                      IsIndeterminate="True"
+                                                      Visibility="Collapsed"/>
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Center">
+                                        <Button x:Name="SaveBlacklistButton"
+                                                Click="SaveBlacklistButton_Click"
+                                                Margin="0,0,10,0"
+                                                Content="Save Changes"/>
+                                        <Button x:Name="LogoutButton"
+                                                Click="LogoutButton_Click"
+                                                Content="Logout"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </Grid>
                         </muxc:Expander>
@@ -386,6 +407,22 @@
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
+        </ContentDialog>
+
+        <ContentDialog x:Name="UpdateDialog"
+                       Title="There is an update for Fluff!"
+                       PrimaryButtonText="Get update!"
+                       PrimaryButtonClick="UpdateDialog_PrimaryButtonClick"
+                       SecondaryButtonText="Maybe later~"
+                       DefaultButton="Primary">
+            <StackPanel>
+                <TextBlock x:Name="UpdateTitle"
+                           FontSize="20"
+                           HorizontalAlignment="Left"/>
+                <TextBlock x:Name="UpdateDescription"
+                           FontSize="16"
+                           HorizontalAlignment="Left"/>
+            </StackPanel>
         </ContentDialog>
     </Grid>
 </Page>

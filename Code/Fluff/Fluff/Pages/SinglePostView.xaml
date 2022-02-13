@@ -8,7 +8,9 @@
     xmlns:eapi="using:e6API"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls" 
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
+    xmlns:Interactivity="using:Microsoft.Xaml.Interactivity" 
+    xmlns:Interactions="using:Microsoft.Xaml.Interactions.Core"
     mc:Ignorable="d"
     Background="Transparent">
     <Page.Resources>
@@ -50,24 +52,19 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <AcrylicBrush x:Key="CustomAcrylicBrush" 
-                      BackgroundSource="Backdrop"
-                      TintOpacity="1" 
-                      TintColor="{ThemeResource SystemAltLowColor}" 
-                      FallbackColor="{ThemeResource SystemAltLowColor}"/>
         <Storyboard x:Name="ShowControls">
             <DoubleAnimation Duration="0:0:0.1"
-                             From="60"
-                             To="20"
-                             Storyboard.TargetProperty="Y"
-                             Storyboard.TargetName="ControlsTrans"/>
+                             From="0.3"
+                             To="1.0"
+                             Storyboard.TargetProperty="Opacity"
+                             Storyboard.TargetName="CustomBarBrush"/>
         </Storyboard>
         <Storyboard x:Name="HideControls">
             <DoubleAnimation Duration="0:0:0.1"
-                             From="20"
-                             To="60"
-                             Storyboard.TargetProperty="Y"
-                             Storyboard.TargetName="ControlsTrans"/>
+                             From="1.0"
+                             To="0.3"
+                             Storyboard.TargetProperty="Opacity"
+                             Storyboard.TargetName="CustomBarBrush"/>
         </Storyboard>
     </Page.Resources>
     <Grid>
@@ -80,10 +77,15 @@
             <StackPanel>
                 <HyperlinkButton x:Name="ArtistsTitle" 
                              Foreground="White" 
-                             Content="Artists:" 
-                             FontSize="24" 
                              Margin="0,0,0,0" 
-                             Click="Title_Click"/>
+                             Click="Title_Click">
+                    <HyperlinkButton.Content>
+                        <TextBlock Text="Artist:"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"
+                                   TextDecorations="Underline"/>
+                    </HyperlinkButton.Content>
+                </HyperlinkButton>
                 <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.artist, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           x:Name="ArtistsTags"
                           IsItemClickEnabled="True"
@@ -97,10 +99,15 @@
                 </ListView>
                 <HyperlinkButton x:Name="CopyrightTitle" 
                                  Foreground="White" 
-                                 Content="Copyrights:" 
-                                 FontSize="24" 
                                  Margin="0,0,0,0" 
-                                 Click="Title_Click"/>
+                                 Click="Title_Click">
+                    <HyperlinkButton.Content>
+                        <TextBlock Text="Copyrights:"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"
+                                   TextDecorations="Underline"/>
+                    </HyperlinkButton.Content>
+                </HyperlinkButton>
                 <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.copyright, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           x:Name="CopyrightsTags"
                           IsItemClickEnabled="True"
@@ -114,10 +121,15 @@
                 </ListView>
                 <HyperlinkButton x:Name="CharactersTitle" 
                                  Foreground="White" 
-                                 Content="Characters:" 
-                                 FontSize="24" 
                                  Margin="0,0,0,0" 
-                                 Click="Title_Click"/>
+                                 Click="Title_Click">
+                    <HyperlinkButton.Content>
+                        <TextBlock Text="Characters:"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"
+                                   TextDecorations="Underline"/>
+                    </HyperlinkButton.Content>
+                </HyperlinkButton>
                 <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.character, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           x:Name="CharactersTags"
                           IsItemClickEnabled="True"
@@ -131,10 +143,15 @@
                 </ListView>
                 <HyperlinkButton x:Name="SpeciesTitle" 
                                  Foreground="White" 
-                                 Content="Species:" 
-                                 FontSize="24" 
                                  Margin="0,0,0,0" 
-                                 Click="Title_Click"/>
+                                 Click="Title_Click">
+                    <HyperlinkButton.Content>
+                        <TextBlock Text="Species:"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"
+                                   TextDecorations="Underline"/>
+                    </HyperlinkButton.Content>
+                </HyperlinkButton>
                 <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.species, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           x:Name="SpeciesTags"
                           IsItemClickEnabled="True"
@@ -147,11 +164,16 @@
                     </ListView.ItemTemplate>
                 </ListView>
                 <HyperlinkButton x:Name="GeneralTitle" 
-                                 Foreground="White" 
-                                 Content="General:" 
-                                 FontSize="24" 
+                                 Foreground="White"
                                  Margin="0,0,0,0" 
-                                 Click="Title_Click"/>
+                                 Click="Title_Click">
+                    <HyperlinkButton.Content>
+                        <TextBlock Text="General:"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"
+                                   TextDecorations="Underline"/>
+                    </HyperlinkButton.Content>
+                </HyperlinkButton>
                 <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.general, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           x:Name="GeneralTags"
                           IsItemClickEnabled="True"
@@ -164,11 +186,16 @@
                     </ListView.ItemTemplate>
                 </ListView>
                 <HyperlinkButton x:Name="MetaTitle" 
-                                 Foreground="White" 
-                                 Content="Meta:" 
-                                 FontSize="24" 
+                                 Foreground="White"
                                  Margin="0,0,0,0" 
-                                 Click="Title_Click"/>
+                                 Click="Title_Click">
+                    <HyperlinkButton.Content>
+                        <TextBlock Text="Meta:"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"
+                                   TextDecorations="Underline"/>
+                    </HyperlinkButton.Content>
+                </HyperlinkButton>
                 <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.meta, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           x:Name="MetaTags"
                           IsItemClickEnabled="True"
@@ -182,10 +209,15 @@
                 </ListView>
                 <HyperlinkButton x:Name="LoreTitle" 
                                  Foreground="White" 
-                                 Content="Lore:" 
-                                 FontSize="24" 
                                  Margin="0,0,0,0" 
-                                 Click="Title_Click"/>
+                                 Click="Title_Click">
+                    <HyperlinkButton.Content>
+                        <TextBlock Text="Lore:"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"
+                                   TextDecorations="Underline"/>
+                    </HyperlinkButton.Content>
+                </HyperlinkButton>
                 <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.lore, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           x:Name="LoreTags"
                           IsItemClickEnabled="True"
@@ -198,11 +230,16 @@
                     </ListView.ItemTemplate>
                 </ListView>
                 <HyperlinkButton x:Name="InvalidTitle" 
-                                 Foreground="White" 
-                                 Content="Invalid:" 
-                                 FontSize="24" 
+                                 Foreground="White"
                                  Margin="0,0,0,0" 
-                                 Click="Title_Click"/>
+                                 Click="Title_Click">
+                    <HyperlinkButton.Content>
+                        <TextBlock Text="Invalid:"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"
+                                   TextDecorations="Underline"/>
+                    </HyperlinkButton.Content>
+                </HyperlinkButton>
                 <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.invalid, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           x:Name="InvalidTags"
                           IsItemClickEnabled="True"
@@ -264,6 +301,30 @@
                                     </MenuFlyout>
                                 </Image.ContextFlyout>
                             </Image>
+                            <MediaElement Source="{x:Bind file.url}"
+                                          PosterSource="{x:Bind file.url}"
+                                          AutoPlay="False"
+                                          x:Name="VideoPlayer"
+                                          IsLooping="True"
+                                          MediaOpened="VideoPlayer_MediaOpened"
+                                          MediaFailed="VideoPlayer_MediaFailed"
+                                          Visibility="Collapsed"
+                                          AreTransportControlsEnabled="True">
+                                <MediaElement.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Text="Copy Video"
+                                                        Click="CopyImage_Click"/>
+                                        <MenuFlyoutItem Text="Save Video"
+                                                        Click="SaveImage_Click"/>
+                                        <MenuFlyoutSubItem Text="Share">
+                                            <MenuFlyoutItem Text="Copy Post Link"
+                                                            Click="CopyPostLink_Click"/>
+                                            <MenuFlyoutItem Text="Copy Direct Link"
+                                                            Click="CopyDirectLink_Click"/>
+                                        </MenuFlyoutSubItem>
+                                    </MenuFlyout>
+                                </MediaElement.ContextFlyout>
+                            </MediaElement>
                         </Grid>
                     </DataTemplate>
                 </FlipView.ItemTemplate>
@@ -274,26 +335,45 @@
                 VerticalAlignment="Bottom"
                 PointerEntered="MouseHoverHandler_PointerEntered"
                 PointerExited="MouseHoverHandler_PointerExited"
-                Background="{StaticResource CustomAcrylicBrush}"
                 CornerRadius="10"
-                Height="65"
+                Height="40"
                 Margin="10">
             <Border.RenderTransform>
-                <TranslateTransform x:Name="ControlsTrans" Y="60"/>
+                <TranslateTransform x:Name="ControlsTrans" Y="0"/>
             </Border.RenderTransform>
-            <StackPanel Orientation="Horizontal">
-                <AppBarButton x:Name="LibraryButton" 
-                              Height="50"
-                              Icon="Library"/>
-                <AppBarButton x:Name="ImageControlsButton" 
-                              Height="50"
-                              Icon="AttachCamera"/>
-                <AppBarButton Icon="Like" 
-                              Height="50"
-                              x:Name="LikeButton"/>
-                <AppBarButton Icon="Dislike" 
-                              Height="50"/>
-            </StackPanel>
+            <Grid>
+                <Border x:Name="CustomBarBrush"
+                        Opacity="0.3">
+                    <Border.Background>
+                        <AcrylicBrush BackgroundSource="Backdrop"
+                                      TintOpacity="1"
+                                      TintColor="Black" 
+                                      FallbackColor="{ThemeResource SystemAltLowColor}"/>
+                    </Border.Background>
+                </Border>
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Top"
+                            Margin="0,-5,0,0">
+                    <AppBarButton x:Name="LibraryButton" 
+                                  Height="50"
+                                  Foreground="White"
+                                  Icon="Library">
+                        <AppBarButton.Flyout>
+                            <MenuFlyout>
+                            </MenuFlyout>
+                        </AppBarButton.Flyout>
+                    </AppBarButton>
+                    <AppBarButton Icon="Like" 
+                                  Height="50"
+                                  Foreground="White"
+                                  Click="LikeButton_Click"
+                                  x:Name="LikeButton"/>
+                    <AppBarButton Icon="Dislike" 
+                                  Click="AppBarButton_Click"
+                                  Foreground="White"
+                                  Height="50"/>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Page>

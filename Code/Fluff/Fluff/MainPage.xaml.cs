@@ -30,8 +30,6 @@ using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 using Windows.Web.Http;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
-
 namespace Fluff
 {
     /// <summary>
@@ -43,6 +41,7 @@ namespace Fluff
         ObservableCollection<DownloadQueueItem> DownloadQueueModel;
         Thread DownloadQueueThread;
         RequestHost host;
+        User CurrentUser;
         bool SysMessIsOpen;
 
         public MainPage()
@@ -57,9 +56,10 @@ namespace Fluff
             PostNavigationArgs.PostsList = new ObservableCollection<e6API.Post>();
             DownloadQueueModel = new ObservableCollection<DownloadQueueItem>();
             SelectedIndex = 0;
-            host = new RequestHost("Fluff/0.3(by EpsilonRho)");
+            host = new RequestHost("Fluff/0.4 (by EpsilonRho)");
             GetSettings();
             SetSettingsUI();
+            //CheckForUpdate();
         }
 
         private void GetSettings()
@@ -112,7 +112,7 @@ namespace Fluff
             }
         }
 
-        private void SetSettingsUI()
+        private async void SetSettingsUI()
         {
             RatingSelection.SelectedItem = SettingsHandler.Rating;
             PostCountSlider.Value = SettingsHandler.PostCount;
@@ -120,13 +120,85 @@ namespace Fluff
             VolumeSwitch.IsOn = SettingsHandler.MuteVolume;
             if(SettingsHandler.Username != "")
             {
-                UsernameEntry.Text = SettingsHandler.Username;
-            }
-            if (SettingsHandler.ApiKey != "")
-            {
-                ApiKeyEntry.Text = SettingsHandler.ApiKey;
+                var check = await host.TryAuthenticate(SettingsHandler.Username, SettingsHandler.ApiKey);
+                if (!check)
+                {
+                    ShowSystemMessage("Login Invalid, Please re-login");
+                    SettingsHandler.Username = "";
+                    SettingsHandler.ApiKey = "";
+                    Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+                    localSettings.Values["username"] = "";
+                    localSettings.Values["apikey"] = "";
+                    return;
+                }
+
+                host.Username = SettingsHandler.Username;
+                host.ApiKey = SettingsHandler.ApiKey;
+                LoginPanel.Visibility = Visibility.Collapsed;
+                LoggedInPanel.Visibility = Visibility.Visible;
+                UsernameSet.Text = SettingsHandler.Username;
+                BlacklistProgress.Visibility = Visibility.Visible;
+                Thread t = new Thread(GetBlacklistTags);
+                t.Start();
             }
         }
+
+        private async void GetBlacklistTags()
+        {
+            var users = await host.SearchUsers(SettingsHandler.Username, 1);
+            string[] tags = users[0].blacklisted_tags.Split(" ");
+            CurrentUser = users[0];
+            if (tags != null)
+            {
+                foreach (string tag in tags)
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        BlacklistBox.Text += $"{tag}\r\n";
+                        BlacklistProgress.Visibility = Visibility.Collapsed;
+                    });
+                }
+            }
+
+        }
+        private void SaveBlacklistButton_Click(object sender, RoutedEventArgs e)
+        {
+            BlacklistProgress.Visibility = Visibility.Visible;
+            Thread t = new Thread(SetBlacklistTags);
+            t.Start();
+        }
+
+        private async void SetBlacklistTags()
+        {
+            string tags = "";
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                BlacklistProgress.Visibility = Visibility.Visible;
+                tags = BlacklistBox.Text;
+            });
+
+            string[] splt = tags.Split("\r\n");
+            tags = "";
+
+            foreach (string str in splt)
+            {
+                tags += $"{str}\\n";
+            }
+            tags = tags.Substring(0, tags.Length - 3);
+
+            string id = CurrentUser.id.ToString();
+
+            var check = await host.UpdateUserBlacklist(id, SettingsHandler.Username, SettingsHandler.ApiKey, tags.Replace("\n", "\\n"));
+            if (check)
+            {
+                ShowSystemMessage("Couldn't Update Blacklist");
+            }
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                BlacklistProgress.Visibility = Visibility.Collapsed;
+            });
+        }
+
 
         private void SetSettings()
         {
@@ -535,15 +607,20 @@ namespace Fluff
             {
                 LoginPanel.Visibility = Visibility.Collapsed;
                 LoggedInPanel.Visibility = Visibility.Visible;
+                SettingsHandler.Username = u;
                 localSettings.Values["username"] = u;
+                SettingsHandler.ApiKey = a;
                 localSettings.Values["apikey"] = a;
                 UsernameSet.Text = u;
             }
             else
             {
-
+                ShowSystemMessage("Invalid Login!");
             }
             LoginProgress.Visibility = Visibility.Collapsed;
+            BlacklistProgress.Visibility = Visibility.Visible;
+            Thread t = new Thread(GetBlacklistTags);
+            t.Start();
         }
 
 
@@ -556,6 +633,42 @@ namespace Fluff
             localSettings.Values["username"] = "";
             localSettings.Values["apikey"] = "";
             UsernameSet.Text = "";
+        }
+
+
+        private async void CheckForUpdate()
+        {
+            var github = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("Fluff"));
+            var releases = await github.Repository.Release.GetAll("EpsiRho", "Fluff");
+            if(releases.Count == 0)
+            {
+                return;
+            }
+
+            var latest = releases[0];
+
+            try
+            {
+                double latestNum = Convert.ToDouble(latest.TagName);
+
+                if (latestNum > 0.4)
+                {
+                    UpdateTitle.Text = latest.Name;
+                    UpdateDescription.Text = latest.Body;
+                    UpdateDialog.ShowAsync();
+                }
+            }
+            catch(Exception)
+            {
+                ShowSystemMessage("Couldn't Check for Update");
+            }
+        }
+
+        private async void UpdateDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            var uri = new Uri("https://github.com/EpsiRho/Fluff/releases");
+
+            var success = await Windows.System.Launcher.LaunchUriAsync(uri);
         }
     }
 }

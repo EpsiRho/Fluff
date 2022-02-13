@@ -50,10 +50,7 @@ namespace Fluff.Pages
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            foreach(var post in PostNavigationArgs.PostsList)
-            {
-                PostsViewModel.Add(post);
-            }
+            PostsViewModel = new ObservableCollection<Post>(PostNavigationArgs.PostsList);
             PostFlipView.SelectedIndex = PostsViewModel.IndexOf(PostNavigationArgs.ClickedPost);
             PostHandler.CurrentPost = PostNavigationArgs.ClickedPost;
 
@@ -63,6 +60,7 @@ namespace Fluff.Pages
                 animation.TryStart(PostFlipView);
             }
         }
+
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             PostNavigationArgs.ClickedPost = PostFlipView.SelectedItem as Post;
@@ -102,14 +100,17 @@ namespace Fluff.Pages
             {
                 ClickedTag = e.ClickedItem as string;
                 MenuFlyout myFlyout = new MenuFlyout();
+                MenuFlyoutItem Item5 = new MenuFlyoutItem { Text = "Search Tag" };
                 MenuFlyoutItem Item1 = new MenuFlyoutItem { Text = "Add tag to search" };
                 MenuFlyoutItem Item2 = new MenuFlyoutItem { Text = "Filter tag from search" };
                 MenuFlyoutItem Item3 = new MenuFlyoutItem { Text = "Favorite tag" };
                 MenuFlyoutItem Item4 = new MenuFlyoutItem { Text = "View Wiki Entry" };
+                Item5.Click += new RoutedEventHandler(SearchTag);
                 Item1.Click += new RoutedEventHandler(AddTagToSearch);
                 Item2.Click += new RoutedEventHandler(FliterTagFromSearch);
                 Item3.Click += new RoutedEventHandler(FavoriteTag);
                 Item4.Click += new RoutedEventHandler(ViewWikiEntry);
+                myFlyout.Items.Add(Item5);
                 myFlyout.Items.Add(Item1);
                 myFlyout.Items.Add(Item2);
                 myFlyout.Items.Add(Item3);
@@ -230,6 +231,12 @@ namespace Fluff.Pages
             PostNavigationArgs.NeedsRefersh = true;
             this.Frame.Navigate(typeof(PostsSearch), null, new EntranceNavigationTransitionInfo());
         }
+        private void SearchTag(object sender, RoutedEventArgs e)
+        {
+            PostNavigationArgs.Tags = ClickedTag;
+            PostNavigationArgs.NeedsRefersh = true;
+            this.Frame.Navigate(typeof(PostsSearch), null, new EntranceNavigationTransitionInfo());
+        }
         private void FliterTagFromSearch(object sender, RoutedEventArgs e)
         {
             if (PostNavigationArgs.Tags.Contains($"{ClickedTag}"))
@@ -316,16 +323,19 @@ namespace Fluff.Pages
                 {
                     dataPackage.SetText("https://e621.net/posts/" + PostHandler.CurrentPost.id);
                     Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dataPackage);
+                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                    var page = (MainPage)grid.Parent;
+                    page.ShowSystemMessage("Copied");
                 });
-                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
-                var page = (MainPage)grid.Parent;
-                page.ShowSystemMessage("Copied");
             }
             catch (Exception err)
             {
-                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
-                var page = (MainPage)grid.Parent;
-                page.ShowSystemMessage("Copy Error");
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                    var page = (MainPage)grid.Parent;
+                    page.ShowSystemMessage("Copy Error");
+                });
             }
         }
 
@@ -347,6 +357,28 @@ namespace Fluff.Pages
         {
             Thread saveThread = new Thread(new ThreadStart(CopyContentLink));
             saveThread.Start();
+        }
+
+        private void VideoPlayer_MediaOpened(object sender, RoutedEventArgs e)
+        {
+            var player = sender as MediaElement;
+            player.Visibility = Visibility.Visible;
+        }
+
+        private void VideoPlayer_MediaFailed(object sender, ExceptionRoutedEventArgs e)
+        {
+            var player = sender as MediaElement;
+            player.Visibility = Visibility.Collapsed;
+        }
+
+        private void LikeButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

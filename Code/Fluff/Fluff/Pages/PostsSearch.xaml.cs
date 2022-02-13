@@ -42,7 +42,7 @@ namespace Fluff.Pages
         public PostsSearch()
         {
             this.InitializeComponent();
-            host = new RequestHost("Fluff/0.3(by EpsilonRho)");
+            host = new RequestHost("Fluff/0.4 (by EpsilonRho)");
             this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
             PostsViewModel = new ObservableCollection<Post>();
             CanGetTags = true;
@@ -160,6 +160,11 @@ namespace Fluff.Pages
 
             // Get Posts
             var posts = await host.GetPosts(tags, count, PostNavigationArgs.Page);
+            if(posts == null)
+            {
+                return;
+            }
+
 
             if(posts.Count == 0)
             {
@@ -223,7 +228,7 @@ namespace Fluff.Pages
             {
                 SearchTagAutoComplete.Items.Clear();
             });
-            var res = await host.SearchTags(tag as string, 8, 1, TagCategory.All, TagsSortOrder.count);
+            var res = await host.GetAutocompletetags(tag as string);
 
             if(res == null)
             {
