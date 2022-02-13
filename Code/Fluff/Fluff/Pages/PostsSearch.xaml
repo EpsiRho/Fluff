@@ -54,6 +54,12 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Storyboard x:Name="ShowPostsGrid">
+            <DoubleAnimation Storyboard.TargetName="PostsViewTrans"
+                             Storyboard.TargetProperty="ScaleY"
+                             Duration="0:0:0.5"
+                             To="1" From="0"/>
+        </Storyboard>
     </Page.Resources>
 
     <Grid>
@@ -120,15 +126,10 @@
                         <ComboBoxItem Content="Lowest Score"/>
                         <ComboBoxItem Content="Random"/>
                     </ComboBox>
-                    <TextBlock Text="Post Count" 
-                               FontSize="18"
-                               HorizontalAlignment="Center"/>
-                    <Slider x:Name="PostCountSelection"
-                            Margin="10,0,10,10"
-                            Minimum="25"
-                            DoubleTapped="PostCountSelection_DoubleTapped"
-                            Maximum="300"
-                            Value="75"/>
+                    <ToggleButton x:Name="DownloadMultiple"
+                                  Content="Download Multiple"
+                                  Click="DownloadMultiple_Click"
+                                  HorizontalAlignment="Center"/>
                 </StackPanel>
                 <Border Background="{StaticResource CustomAcrylicBrush}"
                         CornerRadius="10"
@@ -184,7 +185,11 @@
         <!-- Posts View -->
         <Border Background="{ThemeResource SystemChromeLowColor}"
                 Grid.Column="1"
-                CornerRadius="20,0,0,0">
+                CornerRadius="20,0,0,0"
+                RenderTransformOrigin="1,1">
+            <Border.RenderTransform>
+                <ScaleTransform ScaleY="1" x:Name="PostsViewTrans"/>
+            </Border.RenderTransform>
             <Grid>
                 <GridView x:Name="PostsView"
                           SelectionMode="None"
@@ -192,7 +197,10 @@
                           IsItemClickEnabled="True"
                           ItemsSource="{x:Bind PostsViewModel}"
                           animations:ItemsReorderAnimation.Duration="00:00:00.4"
-                          Margin="10,10,0,10">
+                          Margin="10,10,0,10"
+                          ManipulationMode="TranslateX,TranslateInertia,System" 
+                          ManipulationDelta="PostsView_ManipulationDelta"
+                          ManipulationCompleted="PostsView_ManipulationCompleted">
                     <GridView.ItemTemplate>
                         <DataTemplate x:DataType="eapi:Post">
                             <GridViewItem PointerEntered="GridViewItem_PointerEntered"

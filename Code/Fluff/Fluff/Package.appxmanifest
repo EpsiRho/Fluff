@@ -7,15 +7,15 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="95de2766-7eb7-41cd-b2e3-77317f9db8eb"
+    Name="FluffApp"
     Publisher="CN=jhset"
-    Version="1.0.0.0" />
+    Version="0.3.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="95de2766-7eb7-41cd-b2e3-77317f9db8eb" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>Fluff</DisplayName>
-    <PublisherDisplayName>jhset</PublisherDisplayName>
+    <PublisherDisplayName>Epsi</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -35,10 +35,15 @@
         DisplayName="Fluff"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="Fluff"
+        Description="A beautiful, native windows app for e621!"
         BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" ShortName="Fluff" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square150x150Logo"/>
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile >
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        <uap:LockScreen BadgeLogo="Assets\BadgeLogo.png" Notification="badge"/>
       </uap:VisualElements>
     </Application>
   </Applications>

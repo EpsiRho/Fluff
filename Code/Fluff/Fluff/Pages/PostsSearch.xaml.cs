@@ -30,7 +30,8 @@ namespace Fluff.Pages
         #region Global Page Vars
         ObservableCollection<Post> PostsViewModel;
         RequestHost host;
-        bool CanSearch { get; set; }
+        bool CanSearch;
+        private bool _isGridSwiped;
         public double timeTillSearch;
         Thread TagsThread;
         string TagToSearch;
@@ -41,7 +42,7 @@ namespace Fluff.Pages
         public PostsSearch()
         {
             this.InitializeComponent();
-            host = new RequestHost("Fluff/0.2(by EpsilonRho)");
+            host = new RequestHost("Fluff/0.3(by EpsilonRho)");
             this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
             PostsViewModel = new ObservableCollection<Post>();
             CanGetTags = true;
@@ -58,6 +59,17 @@ namespace Fluff.Pages
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            if (PostNavigationArgs.NeedsRefersh)
+            {
+                SearchBox.Text = PostNavigationArgs.Tags;
+                PostNavigationArgs.Page = 1;
+                PostsViewModel.Clear();
+                PageText.Text = "1";
+
+                StartSearch();
+                return;
+            }
+
             var gridViewItem = PostsView.ContainerFromItem(PostNavigationArgs.ClickedPost) as GridViewItem;
 
             ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation");
@@ -65,7 +77,10 @@ namespace Fluff.Pages
             {
                var fuck = animation.TryStart(gridViewItem);
             }
+
         }
+        
+
         #endregion Page Loading Functions
 
         #region Post Grid Interactions
@@ -74,6 +89,9 @@ namespace Fluff.Pages
             Post p = e.ClickedItem as Post;
             PostNavigationArgs.ClickedPost = p;
             PostNavigationArgs.PostsList = PostsViewModel;
+            PostNavigationArgs.NeedsRefersh = false;
+            PostNavigationArgs.Tags = SearchBox.Text;
+            PostNavigationArgs.PostsList = new ObservableCollection<Post>(PostsViewModel);
 
             var gridViewItem = PostsView.ContainerFromItem(e.ClickedItem) as GridViewItem;
 
@@ -94,8 +112,9 @@ namespace Fluff.Pages
         #endregion Post Grid Interactions
 
         #region Thread Run Functions
-        public async void GetPosts()
+        public async void GetPosts(object CurList)
         {
+            var PostsList = CurList as ObservableCollection<Post>;
             CanSearch = false;
             // Get Tags from search
             string tags = "";
@@ -103,6 +122,9 @@ namespace Fluff.Pages
             {
                 tags = SearchBox.Text;
             });
+
+            // Get max Rating
+            tags += $" rating:{SettingsHandler.Rating}";
 
             // Get Modifiers from combobox
             string modifier = "";
@@ -127,18 +149,21 @@ namespace Fluff.Pages
             }
 
             // Get Post Count from slider
-            int count = 75;
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            int count = (int)SettingsHandler.PostCount;
+
+            // Login if creds are available 
+            if(SettingsHandler.Username != "" && SettingsHandler.ApiKey != "")
             {
-                count = (int)PostCountSelection.Value;
-            });
+                host.Username = SettingsHandler.Username;
+                host.ApiKey = SettingsHandler.ApiKey;
+            }
 
             // Get Posts
             var posts = await host.GetPosts(tags, count, PostNavigationArgs.Page);
 
             if(posts.Count == 0)
             {
-                posts = PostNavigationArgs.PostsList.ToList();
+                posts = PostsList.ToList();
                 if (PostNavigationArgs.Page > 1)
                 {
                     PostNavigationArgs.Page--;
@@ -170,14 +195,13 @@ namespace Fluff.Pages
                 SearchButton.IsEnabled = true;
                 LeftNav.IsEnabled = true;
                 SortSelection.IsEnabled = true;
-                PostCountSelection.IsEnabled = true;
                 RightNav.IsEnabled = true;
             });
             CanSearch = true;
         }
         private void TimerThread()
         {
-            timeTillSearch = 0.2;
+            timeTillSearch = 0.3;
             while (timeTillSearch > 0)
             {
                 timeTillSearch -= 0.1;
@@ -199,7 +223,12 @@ namespace Fluff.Pages
             {
                 SearchTagAutoComplete.Items.Clear();
             });
-            var res = await host.SearchTags(tag as string, 8);
+            var res = await host.SearchTags(tag as string, 8, 1, TagCategory.All, TagsSortOrder.count);
+
+            if(res == null)
+            {
+                return;
+            }
 
             foreach (Tag t in res)
             {
@@ -223,7 +252,7 @@ namespace Fluff.Pages
         }
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            timeTillSearch = 1.5;
+            timeTillSearch = 0.3;
             string[] tags = SearchBox.Text.Split(" ");
             int index = 0;
             int count = 0;
@@ -293,16 +322,14 @@ namespace Fluff.Pages
         private void SearchButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
             PostNavigationArgs.Page = 1;
+            SearchBox.Text += " ";
+            SearchTagAutoComplete.Items.Clear();
             StartSearch();
         }
         private void SortSelection_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             PostNavigationArgs.Page = 1;
             StartSearch();
-        }
-        private void PostCountSelection_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            PostCountSelection.Value = 75;
         }
         private void LeftNav_Click(object sender, RoutedEventArgs e)
         {
@@ -334,30 +361,86 @@ namespace Fluff.Pages
             SearchProgress.Visibility = Visibility.Visible;
             SearchButton.IsEnabled = false;
             SortSelection.IsEnabled = false;
-            PostCountSelection.IsEnabled = false;
             LeftNav.IsEnabled = false;
             RightNav.IsEnabled = false;
-            PostNavigationArgs.PostsList = new ObservableCollection<Post>(PostsViewModel);
             PageText.Text = PostNavigationArgs.Page.ToString();
-            PostsViewModel.Clear();
             Thread t = new Thread(GetPosts);
-            t.Start();
+            t.Start(new ObservableCollection<Post>(PostsViewModel));
+            PostsViewModel.Clear();
         }
+
         #endregion Helper & Common Code Functions
 
+        #region Touch Interactions
+        private void PostsView_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+        {
+            if (e.IsInertial && !_isGridSwiped)
+            {
+                var swipedDistance = e.Cumulative.Translation.X;
 
+                if (Math.Abs(swipedDistance) <= 200) return;
 
+                if (swipedDistance < 0)
+                {
+                    try
+                    {
+                        if (PostsViewModel.Count > 0)
+                        {
+                            PostNavigationArgs.Page++;
+                            StartSearch();
+                        }
+                    }
+                    catch (Exception)
+                    {
 
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        if (PostNavigationArgs.Page != 1)
+                        {
+                            PostNavigationArgs.Page--;
+                            StartSearch();
+                        }
+                    }
+                    catch (Exception)
+                    {
 
+                    }
+                }
+                _isGridSwiped = true;
+            }
+        }
+        private void PostsView_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+        {
+            _isGridSwiped = false;
+        }
+        #endregion
 
+        private void DownloadMultiple_Click(object sender, RoutedEventArgs e)
+        {
+            if (DownloadMultiple.IsChecked.Value)
+            {
+                PostsView.IsItemClickEnabled = false;
+                PostsView.SelectionMode = ListViewSelectionMode.Multiple;
 
+            }
+            else
+            {
+                var list = new List<object>(PostsView.SelectedItems);
+                PostsView.IsItemClickEnabled = true;
+                PostsView.SelectionMode = ListViewSelectionMode.None;
 
-
-
-
-
-
-
-
+                foreach(var item in list)
+                {
+                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                    var page = (MainPage)grid.Parent;
+                    page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = item as Post });
+                }
+            }
+            
+        }
     }
 }

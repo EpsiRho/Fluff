@@ -6,8 +6,15 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
+using System.Threading;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.Imaging;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -16,6 +23,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using Windows.Web.Http;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -57,9 +65,12 @@ namespace Fluff.Pages
         }
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            var gridViewItem = PostFlipView.ContainerFromItem(PostFlipView.SelectedItem) as FlipViewItem;
-
             PostNavigationArgs.ClickedPost = PostFlipView.SelectedItem as Post;
+            if (PostNavigationArgs.NeedsRefersh)
+            {
+                return;
+            }
+            var gridViewItem = PostFlipView.ContainerFromItem(PostFlipView.SelectedItem) as FlipViewItem;
 
             ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation", gridViewItem);
            
@@ -108,6 +119,7 @@ namespace Fluff.Pages
                 pointerPosition.X = pointerPosition.X - Window.Current.Bounds.X;
                 pointerPosition.Y = pointerPosition.Y - Window.Current.Bounds.Y;
                 pointerPosition.X -= 65;
+                pointerPosition.Y += 15;
 
                 myFlyout.ShowAt(((Grid)this.Frame.Parent).Parent as UIElement, pointerPosition);
             }
@@ -205,11 +217,33 @@ namespace Fluff.Pages
         }
         private void AddTagToSearch(object sender, RoutedEventArgs e)
         {
-            // TODO: Make this function
+            if (PostNavigationArgs.Tags.Contains($"-{ClickedTag}"))
+            {
+                PostNavigationArgs.Tags.Replace($"-{ClickedTag}","");
+            }
+
+            if (PostNavigationArgs.Tags.Contains(ClickedTag))
+            {
+                return;
+            }
+            PostNavigationArgs.Tags += $" {ClickedTag}";
+            PostNavigationArgs.NeedsRefersh = true;
+            this.Frame.Navigate(typeof(PostsSearch), null, new EntranceNavigationTransitionInfo());
         }
         private void FliterTagFromSearch(object sender, RoutedEventArgs e)
         {
-            // TODO: Make this function
+            if (PostNavigationArgs.Tags.Contains($"{ClickedTag}"))
+            {
+                PostNavigationArgs.Tags.Replace($"{ClickedTag}", "");
+            }
+
+            if (PostNavigationArgs.Tags.Contains($"-{ClickedTag}"))
+            {
+                return;
+            }
+            PostNavigationArgs.Tags += $" -{ClickedTag}";
+            PostNavigationArgs.NeedsRefersh = true;
+            this.Frame.Navigate(typeof(PostsSearch), null, new EntranceNavigationTransitionInfo());
         }
         private void FavoriteTag(object sender, RoutedEventArgs e)
         {
@@ -220,5 +254,99 @@ namespace Fluff.Pages
             // TODO: Make this function
         }
         #endregion Tags Interactions
+
+        private void CopyImage_Click(object sender, RoutedEventArgs e)
+        {
+            Thread saveThread = new Thread(new ThreadStart(CopyImage));
+            saveThread.Start();
+        }
+        private async void CopyImage()
+        {
+            try
+            {
+                HttpClient client = new HttpClient();
+                var dataPackage = new DataPackage();
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromUri(new Uri(PostHandler.CurrentPost.file.url)));
+                    Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dataPackage);
+                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                    var page = (MainPage)grid.Parent;
+                    page.ShowSystemMessage("Image Copied!");
+                });
+            }
+            catch (Exception e)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                    var page = (MainPage)grid.Parent;
+                    page.ShowSystemMessage("Copy Error");
+                });
+            }
+        }
+
+        private async void CopyContentLink()
+        {
+            try
+            {
+                var dataPackage = new DataPackage();
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    dataPackage.SetText(PostHandler.CurrentPost.file.url);
+                    Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dataPackage);
+                });
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("Copied!");
+            }
+            catch (Exception err)
+            {
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("Copy Error");
+            }
+        }
+        private async void CopyPostLink()
+        {
+            try
+            {
+                var dataPackage = new DataPackage();
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    dataPackage.SetText("https://e621.net/posts/" + PostHandler.CurrentPost.id);
+                    Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dataPackage);
+                });
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("Copied");
+            }
+            catch (Exception err)
+            {
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("Copy Error");
+            }
+        }
+
+        private void SaveImage_Click(object sender, RoutedEventArgs e)
+        {
+            var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+            var page = (MainPage)grid.Parent;
+            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = PostHandler.CurrentPost});
+        }
+        
+
+        private void CopyPostLink_Click(object sender, RoutedEventArgs e)
+        {
+            Thread saveThread = new Thread(new ThreadStart(CopyPostLink));
+            saveThread.Start();
+        }
+
+        private void CopyDirectLink_Click(object sender, RoutedEventArgs e)
+        {
+            Thread saveThread = new Thread(new ThreadStart(CopyContentLink));
+            saveThread.Start();
+        }
     }
 }

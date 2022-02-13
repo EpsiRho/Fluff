@@ -6,14 +6,155 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls" xmlns:classes="using:Fluff.Classes"
     Background="Transparent"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True">
+    <Page.Resources>
+        <AcrylicBrush x:Key="CustomAcrylicBrush" 
+                      BackgroundSource="Backdrop"
+                      TintOpacity="1" 
+                      TintColor="{ThemeResource SystemAltLowColor}" 
+                      FallbackColor="{ThemeResource SystemAltLowColor}"/>
+        <Storyboard x:Name="OpenPostsHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="PostUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0.5" From="0"/>
+        </Storyboard>
+        <Storyboard x:Name="ClosePostsHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="PostUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="OpenPostsFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="PostUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="1" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="ClosePostsFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="PostUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0" />
+        </Storyboard>
+        
+        <Storyboard x:Name="OpenPoolsHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="PoolsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0.5" From="0"/>
+        </Storyboard>
+        <Storyboard x:Name="ClosePoolsHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="PoolsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="OpenPoolsFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="PoolsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="1" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="ClosePoolsFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="PoolsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0"/>
+        </Storyboard>
+
+        <Storyboard x:Name="OpenWikiHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="WikiUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0.5" From="0"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseWikiHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="WikiUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="OpenWikiFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="WikiUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="1" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseWikiFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="WikiUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0"/>
+        </Storyboard>
+
+        <Storyboard x:Name="OpenUploadHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="UploadUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0.5" From="0"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseUploadHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="UploadUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="OpenUploadFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="UploadUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="1" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseUploadFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="UploadUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0"/>
+        </Storyboard>
+        <Storyboard x:Name="OpenSystemMessage">
+            <DoubleAnimation Duration="0:0:0.3"
+                             Storyboard.TargetName="SystemMessageTranslate"
+                             Storyboard.TargetProperty="X"
+                             To="0" From="700"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseSystemMessage">
+            <DoubleAnimation Duration="0:0:0.3"
+                             Storyboard.TargetName="SystemMessageTranslate"
+                             Storyboard.TargetProperty="X"
+                             To="700" From="0"/>
+        </Storyboard>
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="80"/>
             <RowDefinition Height="70*"/>
         </Grid.RowDefinitions>
+        <Border CornerRadius="10"
+                x:Name="SystemMessage"
+                VerticalAlignment="Top"
+                MinWidth="150"
+                MaxWidth="600"
+                Grid.Row="1"
+                HorizontalAlignment="Right"
+                Margin="10,10,10,10"
+                BorderBrush="{ThemeResource SystemChromeAltLowColor}"
+                BorderThickness="2"
+                Canvas.ZIndex="20"
+                Background="{StaticResource CustomAcrylicBrush}">
+            <Border.RenderTransform>
+                <TranslateTransform X="700" x:Name="SystemMessageTranslate"/>
+            </Border.RenderTransform>
+            <Grid>
+                <TextBlock Text="Image Saved!"
+                           HorizontalAlignment="Center"
+                           x:Name="SystemMessagetext"
+                           FontSize="24"
+                           Margin="10,10,10,14"/>
+            </Grid>
+        </Border>
         <Grid>
             <CommandBar Background="Transparent" 
                         IsOpen="False" 
@@ -26,17 +167,125 @@
                         <SymbolIcon Symbol="Back" Margin="0,0,-10,0"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton Icon="Pictures" Label="Posts"/>
-                <AppBarButton Icon="List" Label="Pools"/>
-                <AppBarButton Icon="View" Label="Wiki"/>
-                <AppBarButton Icon="Upload" Label="Upload"/>
+                <AppBarButton Icon="Pictures" 
+                              Label="Posts"
+                              Canvas.ZIndex="1"
+                              x:Name="PostsButton" 
+                              Click="PostsButton_Click"
+                              PointerEntered="PostsButton_PointerEntered"
+                              PointerExited="PostsButton_PointerExited"/>
+                <AppBarButton Icon="List" 
+                              Label="Pools"
+                               IsEnabled="False"
+                              x:Name="PoolsButton"
+                              Canvas.ZIndex="1"
+                              Click="PoolsButton_Click"
+                              PointerEntered="PoolsButton_PointerEntered"
+                              PointerExited="PoolsButton_PointerExited"/>
+                <AppBarButton Icon="View" 
+                              Label="Wiki"
+                               IsEnabled="False"
+                              x:Name="WikiButton"
+                              Canvas.ZIndex="1"
+                              Click="WikiButton_Click"
+                              PointerEntered="WikiButton_PointerEntered"
+                              PointerExited="WikiButton_PointerExited"/>
+                <AppBarButton Icon="Upload" 
+                              Label="Upload"
+                               IsEnabled="False"
+                              x:Name="UploadButton"
+                              Canvas.ZIndex="1"
+                              Click="UploadButton_Click"
+                              PointerEntered="UploadButton_PointerEntered"
+                              PointerExited="UploadButton_PointerExited"/>
             </CommandBar>
+
+            <Rectangle Fill="#6be9ff"
+                       Width="54"
+                       RadiusX="2"
+                       Canvas.ZIndex="0"
+                       RadiusY="2"
+                       Margin="56,0,0,10"
+                       Height="3"
+                       RenderTransformOrigin="0.5,0.5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom">
+                <Rectangle.RenderTransform>
+                    <ScaleTransform ScaleX="1" x:Name="PostUnderline"/>
+                </Rectangle.RenderTransform>
+            </Rectangle>
+            <Rectangle Fill="#6be9ff"
+                       Width="54"
+                       RadiusX="2"
+                       RadiusY="2"
+                       Canvas.ZIndex="0"
+                       Margin="133,0,0,10"
+                       Height="3"
+                       RenderTransformOrigin="0.5,0.5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom">
+                <Rectangle.RenderTransform>
+                    <ScaleTransform ScaleX="0" x:Name="PoolsUnderline"/>
+                </Rectangle.RenderTransform>
+            </Rectangle>
+            <Rectangle Fill="#6be9ff"
+                       Width="54"
+                       RadiusX="2"
+                       RadiusY="2"
+                       Canvas.ZIndex="0"
+                       Margin="208,0,0,10"
+                       Height="3"
+                       RenderTransformOrigin="0.5,0.5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom">
+                <Rectangle.RenderTransform>
+                    <ScaleTransform ScaleX="0" x:Name="WikiUnderline"/>
+                </Rectangle.RenderTransform>
+            </Rectangle>
+            <Rectangle Fill="#6be9ff"
+                       Width="65"
+                       RadiusX="2"
+                       Canvas.ZIndex="0"
+                       RadiusY="2"
+                       Margin="285,0,0,10"
+                       Height="3"
+                       RenderTransformOrigin="0.5,0.5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom">
+                <Rectangle.RenderTransform>
+                    <ScaleTransform ScaleX="0" x:Name="UploadUnderline"/>
+                </Rectangle.RenderTransform>
+            </Rectangle>
+
             <CommandBar Background="Transparent" 
                         IsOpen="False" 
                         Margin="0,0,0,0"
                         DefaultLabelPosition="Right"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom">
+                <AppBarButton x:Name="DownloadButton"
+                              Click="DownloadButton_Click">
+                    <AppBarButton.Icon>
+                        <SymbolIcon Symbol="Download" Margin="0,0,-10,0"/>
+                    </AppBarButton.Icon>
+                    <AppBarButton.Flyout>
+                        <Flyout>
+                            <ListView x:Name="DownloadQueueList"
+                                      ItemsSource="{x:Bind DownloadQueueModel}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="classes:DownloadQueueItem">
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Bind PostToDownload.file.md5, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            <muxc:ProgressBar Maximum="100" 
+                                                              Value="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                              Foreground="{x:Bind ProgressColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Flyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
                 <AppBarButton x:Name="SettingsButton"
                               Click="SettingsButton_Click">
                     <AppBarButton.Icon>
@@ -54,9 +303,10 @@
                        Title="Settings"
                        PrimaryButtonText="Save"
                        DefaultButton="Primary"
+                       PrimaryButtonClick="SettingsDialog_PrimaryButtonClick"
                        SecondaryButtonText="Close">
-            <Grid>
-                <TextBlock Text="Fluff 0.2"
+            <Grid  MinWidth="400">
+                <TextBlock Text="Fluff 0.3"
                            HorizontalAlignment="Left"
                            Margin="1,-15,0,0"
                            VerticalAlignment="Top"/>
@@ -70,9 +320,9 @@
                                 <TextBlock Text="Highest Rating allowed" Margin="10,0,10,0" FontSize="16"/>
                                 <ComboBox x:Name="RatingSelection" Width="220" VerticalAlignment="Top"  FontSize="14"
                                           HorizontalAlignment="Left" Margin="10,10,0,0">
-                                    <x:String>rating:safe</x:String>
-                                    <x:String>rating:questionable</x:String>
-                                    <x:String>rating:explicit</x:String>
+                                    <x:String>safe</x:String>
+                                    <x:String>questionable</x:String>
+                                    <x:String>explicit</x:String>
                                 </ComboBox>
                                 <TextBlock Text="Post Count" Margin="10,0,10,0" FontSize="16"/>
                                 <Slider x:Name="PostCountSlider" Margin="10,0,10,0" Maximum="300" Minimum="25" StepFrequency="5" Value="75" Width="200" HorizontalAlignment="Left"/>
@@ -86,7 +336,38 @@
                             <muxc:Expander.Header>
                                 <TextBlock Text="Login" FontSize="18"/>
                             </muxc:Expander.Header>
-
+                            <Grid>
+                                <StackPanel x:Name="LoginPanel">
+                                    <TextBlock Text="Username" 
+                                               Margin="10,0,10,0" 
+                                               FontSize="16"/>
+                                    <TextBox x:Name="UsernameEntry"
+                                             MinWidth="250"/>
+                                    <TextBlock Text="Api Key" 
+                                               Margin="10,10,10,0" 
+                                               FontSize="16"/>
+                                    <TextBox x:Name="ApiKeyEntry"
+                                             MinWidth="250"/>
+                                    <Button x:Name="LoginButton"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,10,0,0"
+                                            Click="LoginButton_Click"
+                                            Content="Login"/>
+                                    <muxc:ProgressBar x:Name="LoginProgress"
+                                                      Visibility="Collapsed"
+                                                      IsIndeterminate="True"/>
+                                </StackPanel>
+                                <StackPanel x:Name="LoggedInPanel"
+                                            Visibility="Collapsed">
+                                    <TextBlock Margin="10,0,10,0" 
+                                               FontSize="16">
+                                        Username: <Run x:Name="UsernameSet"/>
+                                    </TextBlock>
+                                    <Button x:Name="LogoutButton"
+                                            Click="LogoutButton_Click"
+                                            Content="Logout"/>
+                                </StackPanel>
+                            </Grid>
                         </muxc:Expander>
                         <muxc:Expander HorizontalAlignment="Stretch">
                             <muxc:Expander.Header>

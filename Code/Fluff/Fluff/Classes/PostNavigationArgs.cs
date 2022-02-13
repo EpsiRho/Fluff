@@ -13,5 +13,7 @@ namespace Fluff.Classes
         public static Post ClickedPost { get; set; }
         public static ObservableCollection<Post> PostsList { get; set; }
         public static int Page { get; set; }
+        public static bool NeedsRefersh { get; set; }
+        public static string Tags { get; set; }
     }
 }

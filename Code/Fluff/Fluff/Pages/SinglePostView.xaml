@@ -248,7 +248,22 @@
                                                RelativePanel.AlignHorizontalCenterWith="FlipViewPipsPager"
                                                VerticalAlignment="Center"/>
                             <Image Source="{x:Bind file.url}"
-                                   x:Name="CurrentImage"/>
+                                   x:Name="CurrentImage">
+                                <Image.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Text="Copy Image"
+                                                        Click="CopyImage_Click"/>
+                                        <MenuFlyoutItem Text="Save Image"
+                                                        Click="SaveImage_Click"/>
+                                        <MenuFlyoutSubItem Text="Share">
+                                            <MenuFlyoutItem Text="Copy Post Link"
+                                                            Click="CopyPostLink_Click"/>
+                                            <MenuFlyoutItem Text="Copy Direct Link"
+                                                            Click="CopyDirectLink_Click"/>
+                                        </MenuFlyoutSubItem>
+                                    </MenuFlyout>
+                                </Image.ContextFlyout>
+                            </Image>
                         </Grid>
                     </DataTemplate>
                 </FlipView.ItemTemplate>

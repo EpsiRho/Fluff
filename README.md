@@ -18,11 +18,11 @@ I'm not throwing away all the code either, it'll just be brought over and fit in
   
   - [x] Tag Autocomplete
 
-- [ ] Login to e621
+- [x] Login to e621
 
-- [ ] Save Images/Gifs/Videos
+- [x] Save Images/Gifs/Videos
   
-  - [ ] Save images with tags saved in metadata
+  - [x] Save images with tags saved in metadata
 
 - [x] View Posts
   
