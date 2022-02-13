@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Fluff.Classes
 {
+    /// <summary>
+    /// This contains the current app settings.
+    /// </summary>
     public static class SettingsHandler
     {
         public static string Username { get; set; }

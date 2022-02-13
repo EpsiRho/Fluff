@@ -84,6 +84,14 @@ namespace Fluff.Pages
         {
             HideControls.Begin();
         }
+        private void LikeButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
         #endregion ToolBar Functions
 
         #region Image and FlipView Interactions
@@ -262,9 +270,26 @@ namespace Fluff.Pages
         }
         #endregion Tags Interactions
 
+        #region Image Share Functions
         private void CopyImage_Click(object sender, RoutedEventArgs e)
         {
             Thread saveThread = new Thread(new ThreadStart(CopyImage));
+            saveThread.Start();
+        }
+        private void SaveImage_Click(object sender, RoutedEventArgs e)
+        {
+            var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+            var page = (MainPage)grid.Parent;
+            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = PostHandler.CurrentPost});
+        }
+        private void CopyPostLink_Click(object sender, RoutedEventArgs e)
+        {
+            Thread saveThread = new Thread(new ThreadStart(CopyPostLink));
+            saveThread.Start();
+        }
+        private void CopyDirectLink_Click(object sender, RoutedEventArgs e)
+        {
+            Thread saveThread = new Thread(new ThreadStart(CopyContentLink));
             saveThread.Start();
         }
         private async void CopyImage()
@@ -292,7 +317,6 @@ namespace Fluff.Pages
                 });
             }
         }
-
         private async void CopyContentLink()
         {
             try
@@ -338,47 +362,24 @@ namespace Fluff.Pages
                 });
             }
         }
+        #endregion Image Share Functions
 
-        private void SaveImage_Click(object sender, RoutedEventArgs e)
-        {
-            var grid = ((Grid)this.Frame.Parent).Parent as Grid;
-            var page = (MainPage)grid.Parent;
-            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = PostHandler.CurrentPost});
-        }
-        
-
-        private void CopyPostLink_Click(object sender, RoutedEventArgs e)
-        {
-            Thread saveThread = new Thread(new ThreadStart(CopyPostLink));
-            saveThread.Start();
-        }
-
-        private void CopyDirectLink_Click(object sender, RoutedEventArgs e)
-        {
-            Thread saveThread = new Thread(new ThreadStart(CopyContentLink));
-            saveThread.Start();
-        }
-
+        #region Videoplayer Functions
         private void VideoPlayer_MediaOpened(object sender, RoutedEventArgs e)
         {
             var player = sender as MediaElement;
             player.Visibility = Visibility.Visible;
         }
-
         private void VideoPlayer_MediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
             var player = sender as MediaElement;
             player.Visibility = Visibility.Collapsed;
         }
+        #endregion Videoplayer Functions
 
-        private void LikeButton_Click(object sender, RoutedEventArgs e)
-        {
 
-        }
 
-        private void AppBarButton_Click(object sender, RoutedEventArgs e)
-        {
 
-        }
+
     }
 }

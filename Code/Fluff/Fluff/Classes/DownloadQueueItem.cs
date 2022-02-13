@@ -10,6 +10,9 @@ using Windows.UI.Xaml.Media;
 
 namespace Fluff.Classes
 {
+    /// <summary>
+    /// This is an item used in the download queue.
+    /// </summary>
     public class DownloadQueueItem : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;

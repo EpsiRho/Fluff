@@ -62,6 +62,7 @@ namespace Fluff
             //CheckForUpdate();
         }
 
+        #region Settings Functions
         private void GetSettings()
         {
             Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
@@ -111,7 +112,18 @@ namespace Fluff
                 localSettings.Values["postcount"] = 75;
             }
         }
-
+        private void SetSettings()
+        {
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values["rating"] = RatingSelection.SelectedItem as string;
+            SettingsHandler.Rating = RatingSelection.SelectedItem as string;
+            localSettings.Values["postcount"] = PostCountSlider.Value;
+            SettingsHandler.PostCount = (double)PostCountSlider.Value;
+            localSettings.Values["comments"] = CommentSwitch.IsOn;
+            SettingsHandler.ShowComments = CommentSwitch.IsOn;
+            localSettings.Values["volume"] = VolumeSwitch.IsOn;
+            SettingsHandler.MuteVolume = VolumeSwitch.IsOn;
+        }
         private async void SetSettingsUI()
         {
             RatingSelection.SelectedItem = SettingsHandler.Rating;
@@ -142,7 +154,12 @@ namespace Fluff
                 t.Start();
             }
         }
-
+        private void SaveBlacklistButton_Click(object sender, RoutedEventArgs e)
+        {
+            BlacklistProgress.Visibility = Visibility.Visible;
+            Thread t = new Thread(SetBlacklistTags);
+            t.Start();
+        }
         private async void GetBlacklistTags()
         {
             var users = await host.SearchUsers(SettingsHandler.Username, 1);
@@ -161,13 +178,6 @@ namespace Fluff
             }
 
         }
-        private void SaveBlacklistButton_Click(object sender, RoutedEventArgs e)
-        {
-            BlacklistProgress.Visibility = Visibility.Visible;
-            Thread t = new Thread(SetBlacklistTags);
-            t.Start();
-        }
-
         private async void SetBlacklistTags()
         {
             string tags = "";
@@ -198,21 +208,55 @@ namespace Fluff
                 BlacklistProgress.Visibility = Visibility.Collapsed;
             });
         }
+        private void SettingsDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            SetSettings();
+        }
+        private async void LoginButton_Click(object sender, RoutedEventArgs e)
+        {
+            LoginProgress.Visibility = Visibility.Visible;
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            string u = "";
+            string a = "";
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                u = UsernameEntry.Text;
+                a = ApiKeyEntry.Text;
+            });
 
+            var check = await host.TryAuthenticate(u, a);
 
-        private void SetSettings()
+            if (check)
+            {
+                LoginPanel.Visibility = Visibility.Collapsed;
+                LoggedInPanel.Visibility = Visibility.Visible;
+                SettingsHandler.Username = u;
+                localSettings.Values["username"] = u;
+                SettingsHandler.ApiKey = a;
+                localSettings.Values["apikey"] = a;
+                UsernameSet.Text = u;
+            }
+            else
+            {
+                ShowSystemMessage("Invalid Login!");
+            }
+            LoginProgress.Visibility = Visibility.Collapsed;
+            BlacklistProgress.Visibility = Visibility.Visible;
+            Thread t = new Thread(GetBlacklistTags);
+            t.Start();
+        }
+        private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
             Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values["rating"] = RatingSelection.SelectedItem as string;
-            SettingsHandler.Rating = RatingSelection.SelectedItem as string;
-            localSettings.Values["postcount"] = PostCountSlider.Value;
-            SettingsHandler.PostCount = (double)PostCountSlider.Value;
-            localSettings.Values["comments"] = CommentSwitch.IsOn;
-            SettingsHandler.ShowComments = CommentSwitch.IsOn;
-            localSettings.Values["volume"] = VolumeSwitch.IsOn;
-            SettingsHandler.MuteVolume = VolumeSwitch.IsOn;
+            LoginPanel.Visibility = Visibility.Visible;
+            LoggedInPanel.Visibility = Visibility.Collapsed;
+            localSettings.Values["username"] = "";
+            localSettings.Values["apikey"] = "";
+            UsernameSet.Text = "";
         }
+        #endregion Settings Functions
 
+        #region Topbar Functions
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
             var MyFrame = contentFrame;
@@ -221,12 +265,6 @@ namespace Fluff
                 MyFrame.GoBack(new SuppressNavigationTransitionInfo());
             }
         }
-
-        private void SettingsButton_Click(object sender, RoutedEventArgs e)
-        {
-            SettingsDialog.ShowAsync();
-        }
-
         private void PostsButton_Click(object sender, RoutedEventArgs e)
         {
             OpenPostsFull.Begin();
@@ -235,7 +273,6 @@ namespace Fluff
             CloseUploadFull.Begin();
             contentFrame.Navigate(typeof(PostsSearch));
         }
-
         private void PostsButton_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
             if (PostUnderline.ScaleX != 1)
@@ -243,7 +280,6 @@ namespace Fluff
                 OpenPostsHalf.Begin();
             }
         }
-
         private void PostsButton_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (PostUnderline.ScaleX != 1)
@@ -251,7 +287,6 @@ namespace Fluff
                 ClosePostsHalf.Begin();
             }
         }
-
         private void PoolsButton_Click(object sender, RoutedEventArgs e)
         {
             ClosePostsFull.Begin();
@@ -259,7 +294,6 @@ namespace Fluff
             CloseWikiFull.Begin();
             CloseUploadFull.Begin();
         }
-
         private void PoolsButton_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
             if (PoolsUnderline.ScaleX != 1)
@@ -267,7 +301,6 @@ namespace Fluff
                 OpenPoolsHalf.Begin();
             }
         }
-
         private void PoolsButton_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (PoolsUnderline.ScaleX != 1)
@@ -275,15 +308,6 @@ namespace Fluff
                 ClosePoolsHalf.Begin();
             }
         }
-
-        private void WikiButton_PointerEntered(object sender, PointerRoutedEventArgs e)
-        {
-            if (WikiUnderline.ScaleX != 1)
-            {
-                OpenWikiHalf.Begin();
-            }
-        }
-
         private void WikiButton_Click(object sender, RoutedEventArgs e)
         {
             ClosePostsFull.Begin();
@@ -291,7 +315,13 @@ namespace Fluff
             OpenWikiFull.Begin();
             CloseUploadFull.Begin();
         }
-
+        private void WikiButton_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (WikiUnderline.ScaleX != 1)
+            {
+                OpenWikiHalf.Begin();
+            }
+        }
         private void WikiButton_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (WikiUnderline.ScaleX != 1)
@@ -299,7 +329,6 @@ namespace Fluff
                 CloseWikiHalf.Begin();
             }
         }
-
         private void UploadButton_Click(object sender, RoutedEventArgs e)
         {
             ClosePostsFull.Begin();
@@ -307,7 +336,6 @@ namespace Fluff
             CloseWikiFull.Begin();
             OpenUploadFull.Begin();
         }
-
         private void UploadButton_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
             if (UploadUnderline.ScaleX != 1)
@@ -315,7 +343,6 @@ namespace Fluff
                 OpenUploadHalf.Begin();
             }
         }
-
         private void UploadButton_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (UploadUnderline.ScaleX != 1)
@@ -323,13 +350,17 @@ namespace Fluff
                 CloseUploadHalf.Begin();
             }
         }
-
         private void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
 
         }
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsDialog.ShowAsync();
+        }
+        #endregion Topbar Functions
 
-
+        #region Crosspage Helpers
         public async void ShowSystemMessage(string message)
         {
             if (SysMessIsOpen)
@@ -354,7 +385,6 @@ namespace Fluff
             });
             SysMessIsOpen = false;
         }
-
         public void AddItemToQueue(DownloadQueueItem p)
         {
             DownloadQueueModel.Add(p);
@@ -364,7 +394,9 @@ namespace Fluff
                 DownloadQueueThread.Start();
             }
         }
+        #endregion Crosspage Helpers
 
+        #region Image Saving
         private async void DownloadThread()
         {
             while(DownloadQueueModel.Count > 0)
@@ -384,7 +416,6 @@ namespace Fluff
             }
             DownloadQueueThread = null;
         }
-
         private async Task SaveImage(DownloadQueueItem PostToSave)
         {
             try
@@ -583,59 +614,10 @@ namespace Fluff
                 });
             }
         }
-
-        private void SettingsDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
-        {
-            SetSettings();
-        }
-
-        private async void LoginButton_Click(object sender, RoutedEventArgs e)
-        {
-            LoginProgress.Visibility = Visibility.Visible;
-            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            string u = "";
-            string a = "";
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                u = UsernameEntry.Text;
-                a = ApiKeyEntry.Text;
-            });
-
-            var check = await host.TryAuthenticate(u, a);
-
-            if (check)
-            {
-                LoginPanel.Visibility = Visibility.Collapsed;
-                LoggedInPanel.Visibility = Visibility.Visible;
-                SettingsHandler.Username = u;
-                localSettings.Values["username"] = u;
-                SettingsHandler.ApiKey = a;
-                localSettings.Values["apikey"] = a;
-                UsernameSet.Text = u;
-            }
-            else
-            {
-                ShowSystemMessage("Invalid Login!");
-            }
-            LoginProgress.Visibility = Visibility.Collapsed;
-            BlacklistProgress.Visibility = Visibility.Visible;
-            Thread t = new Thread(GetBlacklistTags);
-            t.Start();
-        }
+        #endregion Image Saving
 
 
-
-        private void LogoutButton_Click(object sender, RoutedEventArgs e)
-        {
-            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            LoginPanel.Visibility = Visibility.Visible;
-            LoggedInPanel.Visibility = Visibility.Collapsed;
-            localSettings.Values["username"] = "";
-            localSettings.Values["apikey"] = "";
-            UsernameSet.Text = "";
-        }
-
-
+        // Unused update checker for github updates, but waiting on microsoft store review :D
         private async void CheckForUpdate()
         {
             var github = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("Fluff"));
@@ -663,12 +645,16 @@ namespace Fluff
                 ShowSystemMessage("Couldn't Check for Update");
             }
         }
-
         private async void UpdateDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
             var uri = new Uri("https://github.com/EpsiRho/Fluff/releases");
 
             var success = await Windows.System.Launcher.LaunchUriAsync(uri);
         }
+
+
+
+
+
     }
 }

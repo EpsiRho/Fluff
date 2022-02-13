@@ -28,13 +28,21 @@ namespace Fluff.Pages
     public sealed partial class PostsSearch : Page
     {
         #region Global Page Vars
+        // The collection of posts bound to the gridview
         ObservableCollection<Post> PostsViewModel;
+        // The Api host
         RequestHost host;
+        // If searching is allowed, used to keep the filters from starting more searches on page load.
         bool CanSearch;
+        // Used for grid swiping
         private bool _isGridSwiped;
+        // Used to timeout tag autocomplete until the user stops typing.
         public double timeTillSearch;
+        // The thread that waits for the user to stop typing
         Thread TagsThread;
+        // The tag that will be searched when timeTillSearch = 0
         string TagToSearch;
+        // If tags can be searched for
         bool CanGetTags;
         #endregion Global Page Vars
 
@@ -42,23 +50,21 @@ namespace Fluff.Pages
         public PostsSearch()
         {
             this.InitializeComponent();
-            host = new RequestHost("Fluff/0.4 (by EpsilonRho)");
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
-            PostsViewModel = new ObservableCollection<Post>();
-            CanGetTags = true;
-            SearchButtonPanel.Visibility = Visibility.Collapsed;
-            SearchProgress.Visibility = Visibility.Visible;
-            SearchButton.IsEnabled = false;
-            PostsViewModel.Clear();
+            host = new RequestHost("Fluff/0.5 (by EpsilonRho)"); // Initialize the api host
+            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled; // Set page chache, this needs to change.
+            PostsViewModel = new ObservableCollection<Post>(); // Initialize the post holder
+            CanGetTags = true; // set this to start as true
+
+            // Start the inital search
+            CanSearch = true;
+            StartSearch();
             PageText.Text = "1";
 
-            Thread t = new Thread(GetPosts);
-            t.Start();
 
-            // TODO: Get Settings
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            // This is going to have to change.
             if (PostNavigationArgs.NeedsRefersh)
             {
                 SearchBox.Text = PostNavigationArgs.Tags;
@@ -70,6 +76,7 @@ namespace Fluff.Pages
                 return;
             }
 
+            // This gets the gridview item if there is one and uses it to animate the return to this page.
             var gridViewItem = PostsView.ContainerFromItem(PostNavigationArgs.ClickedPost) as GridViewItem;
 
             ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation");
@@ -86,6 +93,7 @@ namespace Fluff.Pages
         #region Post Grid Interactions
         private void PostsView_ItemClick(object sender, ItemClickEventArgs e)
         {
+            // Get the post and setup the post nav args. this will need to change eventually
             Post p = e.ClickedItem as Post;
             PostNavigationArgs.ClickedPost = p;
             PostNavigationArgs.PostsList = PostsViewModel;
@@ -93,19 +101,22 @@ namespace Fluff.Pages
             PostNavigationArgs.Tags = SearchBox.Text;
             PostNavigationArgs.PostsList = new ObservableCollection<Post>(PostsViewModel);
 
+            // get the UI element and use it to start the animation
             var gridViewItem = PostsView.ContainerFromItem(e.ClickedItem) as GridViewItem;
-
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation", gridViewItem);
+
+            // Start navigation
             this.Frame.Navigate(typeof(SinglePostView), null, new SuppressNavigationTransitionInfo());
         }
         private void GridViewItem_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            //var item = PostsView.ContainerFromItem(e.ClickedItem) as GridViewItem;
+            // Start the animation to show the like / fav bar
             Storyboard sb = ((GridViewItem)sender).Resources["ShowImageBar"] as Storyboard;
             sb.Begin();
         }
         private void GridViewItem_PointerExited(object sender, PointerRoutedEventArgs e)
         {
+            // Start the animation to hide the like / fav bar
             Storyboard sb = ((GridViewItem)sender).Resources["HideImageBar"] as Storyboard;
             sb.Begin();
         }
@@ -114,8 +125,12 @@ namespace Fluff.Pages
         #region Thread Run Functions
         public async void GetPosts(object CurList)
         {
+            // Convert the args from object to usable args.
             var PostsList = CurList as ObservableCollection<Post>;
+
+            // Disable extra searches
             CanSearch = false;
+
             // Get Tags from search
             string tags = "";
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -165,12 +180,13 @@ namespace Fluff.Pages
                 return;
             }
 
-
+            // If there are no posts, try to load the last list of posts.
+            // This is for when your navigating to the last page of a search, so it doesn't load an empty page.
             if(posts.Count == 0)
             {
-                posts = PostsList.ToList();
                 if (PostNavigationArgs.Page > 1)
                 {
+                    posts = PostsList.ToList();
                     PostNavigationArgs.Page--;
                 }
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -193,6 +209,7 @@ namespace Fluff.Pages
                 });
             }
 
+            // Set controls to be enabled again.
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 SearchProgress.Visibility = Visibility.Collapsed;
@@ -336,6 +353,29 @@ namespace Fluff.Pages
             PostNavigationArgs.Page = 1;
             StartSearch();
         }
+        private void DownloadMultiple_Click(object sender, RoutedEventArgs e)
+        {
+            if (DownloadMultiple.IsChecked.Value)
+            {
+                PostsView.IsItemClickEnabled = false;
+                PostsView.SelectionMode = ListViewSelectionMode.Multiple;
+
+            }
+            else
+            {
+                var list = new List<object>(PostsView.SelectedItems);
+                PostsView.IsItemClickEnabled = true;
+                PostsView.SelectionMode = ListViewSelectionMode.None;
+
+                foreach(var item in list)
+                {
+                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                    var page = (MainPage)grid.Parent;
+                    page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = item as Post });
+                }
+            }
+            
+        }
         private void LeftNav_Click(object sender, RoutedEventArgs e)
         {
             if (!CanSearch)
@@ -424,28 +464,5 @@ namespace Fluff.Pages
         }
         #endregion
 
-        private void DownloadMultiple_Click(object sender, RoutedEventArgs e)
-        {
-            if (DownloadMultiple.IsChecked.Value)
-            {
-                PostsView.IsItemClickEnabled = false;
-                PostsView.SelectionMode = ListViewSelectionMode.Multiple;
-
-            }
-            else
-            {
-                var list = new List<object>(PostsView.SelectedItems);
-                PostsView.IsItemClickEnabled = true;
-                PostsView.SelectionMode = ListViewSelectionMode.None;
-
-                foreach(var item in list)
-                {
-                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
-                    var page = (MainPage)grid.Parent;
-                    page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = item as Post });
-                }
-            }
-            
-        }
     }
 }

@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace Fluff.Classes
 {
+    /// <summary>
+    /// This allows for sending property changed calls to update the UI when the current post changes.
+    /// </summary>
     public class CurrentPostNotif : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;

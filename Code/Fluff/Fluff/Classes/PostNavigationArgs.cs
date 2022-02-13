@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Fluff.Classes
 {
+    /// <summary>
+    /// Some args that can be pushed through page transitions. should be non static in the future, pls fix.
+    /// </summary>
     public static class PostNavigationArgs
     {
         public static Post ClickedPost { get; set; }

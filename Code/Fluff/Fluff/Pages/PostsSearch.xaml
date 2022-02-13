@@ -11,11 +11,14 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d">
     <Page.Resources>
+        <!-- Styles the acrylic on the page, used for the like count flyup and the page changer buttons on the bottom left. -->
         <AcrylicBrush x:Key="CustomAcrylicBrush" 
                       BackgroundSource="Backdrop"
                       TintOpacity="0.9" 
                       TintColor="{ThemeResource SystemAltLowColor}" 
                       FallbackColor="{ThemeResource SystemAltLowColor}"/>
+        
+        <!-- Styles the gridsplitter, makes it invisible. Allows the user to resize the two sides of this page. -->
         <Style TargetType="controls:GridSplitter">
             <Setter Property="IsTabStop" Value="True" />
             <Setter Property="UseSystemFocusVisuals" Value="True" />
@@ -54,12 +57,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Storyboard x:Name="ShowPostsGrid">
-            <DoubleAnimation Storyboard.TargetName="PostsViewTrans"
-                             Storyboard.TargetProperty="ScaleY"
-                             Duration="0:0:0.5"
-                             To="1" From="0"/>
-        </Storyboard>
     </Page.Resources>
 
     <Grid>
@@ -73,6 +70,7 @@
                 CornerRadius="0,10,10,0">
             <Grid>
                 <StackPanel>
+                    <!-- Search Bar -->
                     <TextBlock Text="Search"
                                HorizontalAlignment="Center"
                                FontSize="24"
@@ -83,10 +81,14 @@
                              TextWrapping="NoWrap"
                              TextChanged="SearchBox_TextChanged"
                              Margin="10,10,10,10"/>
+                    
+                    <!-- List that shows autocomplete suggestions when typing -->
                     <ListView x:Name="SearchTagAutoComplete" 
                               Visibility="Visible" 
                               IsItemClickEnabled="True" 
                               ItemClick="SearchTagAutoComplete_ItemClick"/>
+                    
+                    <!-- Search Button -->
                     <Grid Margin="10,0,10,15">
                         <Button HorizontalAlignment="Stretch"
                                 x:Name="SearchButton"
@@ -106,12 +108,16 @@
                                 </RelativePanel>
                             </Button.Content>
                         </Button>
+                        
+                        <!-- Search Progressbar -->
                         <muxc:ProgressBar x:Name="SearchProgress"
                                           Margin="10,0,10,0"
                                           Visibility="Collapsed"
                                           HorizontalAlignment="Stretch"
                                           IsIndeterminate="True"/>
                     </Grid>
+                    
+                    <!-- Sorting Filters -->
                     <TextBlock Text="Sort By" 
                                FontSize="18"
                                HorizontalAlignment="Center"/>
@@ -126,11 +132,15 @@
                         <ComboBoxItem Content="Lowest Score"/>
                         <ComboBoxItem Content="Random"/>
                     </ComboBox>
+                    
+                    <!-- Download Multiple Button-->
                     <ToggleButton x:Name="DownloadMultiple"
                                   Content="Download Multiple"
                                   Click="DownloadMultiple_Click"
                                   HorizontalAlignment="Center"/>
                 </StackPanel>
+                
+                <!-- Page Navigation Buttons-->
                 <Border Background="{StaticResource CustomAcrylicBrush}"
                         CornerRadius="10"
                         HorizontalAlignment="Center"
@@ -168,9 +178,12 @@
                         </AppBarButton>
                     </StackPanel>
                 </Border>
+                
+                
             </Grid>
         </Border>
-
+        
+        <!-- Gridsplitter allows for resizing of the two panels of this page. -->
         <controls:GridSplitter Width="10" 
                                Margin="-5,0,0,0"
                                Grid.Column="1"
@@ -187,10 +200,9 @@
                 Grid.Column="1"
                 CornerRadius="20,0,0,0"
                 RenderTransformOrigin="1,1">
-            <Border.RenderTransform>
-                <ScaleTransform ScaleY="1" x:Name="PostsViewTrans"/>
-            </Border.RenderTransform>
             <Grid>
+                
+                <!-- The gridview that hosts posts. -->
                 <GridView x:Name="PostsView"
                           SelectionMode="None"
                           ItemClick="PostsView_ItemClick"
@@ -205,6 +217,8 @@
                         <DataTemplate x:DataType="eapi:Post">
                             <GridViewItem PointerEntered="GridViewItem_PointerEntered"
                                           PointerExited="GridViewItem_PointerExited">
+                                
+                                <!-- These storyboards move the liked / fav count bar up on hover-->
                                 <GridViewItem.Resources>
                                     <Storyboard x:Name="ShowImageBar">
                                         <DoubleAnimation Duration="0:0:0.1"
@@ -219,10 +233,13 @@
                                                          Storyboard.TargetProperty="Y"/>
                                     </Storyboard>
                                 </GridViewItem.Resources>
+                                
                                 <Grid Width="180"
                                       Height="180">
                                     <Image Source="{x:Bind preview.url}"
                                            Stretch="None"/>
+                                    
+                                    <!-- This is the bar that flys up on hover -->
                                     <Border CornerRadius="10"
                                             Margin="10,0,10,5"
                                             VerticalAlignment="Bottom"
@@ -255,11 +272,13 @@
                                                        Margin="5,3,5,8"/>
                                         </RelativePanel>
                                     </Border>
+                                    
                                 </Grid>
                             </GridViewItem>
                         </DataTemplate>
                     </GridView.ItemTemplate>
                 </GridView>
+                
             </Grid>
         </Border>
 
