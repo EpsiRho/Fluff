@@ -360,8 +360,25 @@
                             Height="50"
                             Foreground="White">
                         <Button.Flyout>
-                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
-                            </MenuFlyout>
+                            <Flyout Placement="BottomEdgeAlignedLeft">
+                                <Grid>
+                                    <ListView x:Name="PoolsListView"
+                                              MaxHeight="200"
+                                              Margin="-15,-13,-15,-15"
+                                              IsItemClickEnabled="True"
+                                              SelectionMode="None"
+                                              ItemClick="PoolsListView_ItemClick"
+                                              ItemsSource="{x:Bind PoolsSource}">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="eapi:Pool">
+                                                <Grid>
+                                                    <TextBlock Text="{x:Bind name}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </Grid>
+                            </Flyout>
                         </Button.Flyout>
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">

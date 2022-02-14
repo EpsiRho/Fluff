@@ -5,6 +5,7 @@
 * Fixed crash on initial login.
 * Mute videos settings works.
 * Moved post controls to the top to keep it out of the way of the video player UI.
+* Fixed bug preventing proper page back movement
 
 ### Changes
 

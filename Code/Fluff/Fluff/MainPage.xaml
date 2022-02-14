@@ -176,7 +176,7 @@
                               PointerExited="PostsButton_PointerExited"/>
                 <AppBarButton Icon="List" 
                               Label="Pools"
-                               IsEnabled="False"
+                              IsEnabled="True"
                               x:Name="PoolsButton"
                               Canvas.ZIndex="1"
                               Click="PoolsButton_Click"
@@ -184,7 +184,7 @@
                               PointerExited="PoolsButton_PointerExited"/>
                 <AppBarButton Icon="View" 
                               Label="Wiki"
-                               IsEnabled="False"
+                              IsEnabled="False"
                               x:Name="WikiButton"
                               Canvas.ZIndex="1"
                               Click="WikiButton_Click"
@@ -192,7 +192,7 @@
                               PointerExited="WikiButton_PointerExited"/>
                 <AppBarButton Icon="Upload" 
                               Label="Upload"
-                               IsEnabled="False"
+                              IsEnabled="False"
                               x:Name="UploadButton"
                               Canvas.ZIndex="1"
                               Click="UploadButton_Click"
@@ -275,7 +275,7 @@
                                 <ListView.ItemTemplate>
                                     <DataTemplate x:DataType="classes:DownloadQueueItem">
                                         <StackPanel>
-                                            <TextBlock Text="{x:Bind PostToDownload.file.md5, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            <TextBlock Text="{x:Bind FileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             <muxc:ProgressBar Maximum="100" 
                                                               Value="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                               Foreground="{x:Bind ProgressColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -321,7 +321,6 @@
                                 <ComboBox x:Name="RatingSelection" Width="220" VerticalAlignment="Top"  FontSize="14"
                                           HorizontalAlignment="Left" Margin="10,10,0,0">
                                     <x:String>safe</x:String>
-                                    <x:String>questionable</x:String>
                                     <x:String>explicit</x:String>
                                 </ComboBox>
                                 <TextBlock Text="Post Count" Margin="10,0,10,0" FontSize="16"/>
