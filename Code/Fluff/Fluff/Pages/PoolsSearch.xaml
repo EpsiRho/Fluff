@@ -185,20 +185,33 @@
                           IsItemClickEnabled="True">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="eapi:Pool">
-                            <Grid>
-                                <RelativePanel Margin="0,0,0,0">
-                                    <StackPanel x:Name="LeftStack">
-                                        <TextBlock HorizontalAlignment="Left"
-                                                   Height="30"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Margin="0,0,20,0">
+                            <Grid Margin="0,0,0,0">
+                                <StackPanel x:Name="LeftStack">
+                                    <TextBlock HorizontalAlignment="Left"
+                                               Height="50"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,0,240,0">
                                             <Run Text="{x:Bind name}" 
                                                  TextDecorations="Underline"
                                                  FontSize="24"/> 
-                                            <Run Text="{x:Bind description}"/>
-                                        </TextBlock>
-                                    </StackPanel>
-                                </RelativePanel>
+                                            <Run Text="{x:Bind description}"
+                                                 FontSize="16"/>
+                                    </TextBlock>
+                                </StackPanel>
+                                <TextBlock HorizontalAlignment="Right"
+                                           Margin="0,6,0,0">
+                                        <Run Text="{x:Bind post_count}"
+                                             FontWeight="Bold"/>
+                                        <Run Text="Posts"
+                                             FontWeight="Bold"/>
+                                </TextBlock>
+                                <TextBlock HorizontalAlignment="Right"
+                                           Margin="0,26,0,0">
+                                        <Run Text="Updated: "
+                                             FontWeight="Bold"/>
+                                        <Run Text="{x:Bind updated_at}"
+                                             FontWeight="Bold"/>
+                                </TextBlock>
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>

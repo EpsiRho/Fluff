@@ -38,11 +38,21 @@ namespace Fluff.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             args = PagesStack.ArgsStack[(int)e.Parameter];
-            host = new RequestHost("Fluff/0.5 (by EpsilonRho)");
+            host = new RequestHost(SettingsHandler.UserAgent);
             PoolsViewModel = new ObservableCollection<Pool>();
 
-            Thread t = new Thread(GetPools);
-            t.Start();
+            if (args.PoolsList == null)
+            {
+                PoolsViewModel.Clear();
+                Thread t = new Thread(GetPools);
+                t.Start();
+            }
+            else
+            {
+                PoolsViewModel = new ObservableCollection<Pool>(args.PoolsList);
+                SearchProgress.Visibility = Visibility.Collapsed;
+            }
+            
         }
 
         private async void GetPools()
@@ -73,6 +83,7 @@ namespace Fluff.Pages
                     PoolsViewModel.Add(pool);
                 });
             }
+            args.PoolsList = new ObservableCollection<Pool>(PoolsViewModel);
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 SearchProgress.Visibility = Visibility.Collapsed;

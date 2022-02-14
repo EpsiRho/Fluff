@@ -16,6 +16,7 @@ namespace Fluff.Classes
         public Post ClickedPost { get; set; }
         public Pool ClickedPool { get; set; }
         public ObservableCollection<Post> PostsList { get; set; }
+        public ObservableCollection<Pool> PoolsList { get; set; }
         public int Page { get; set; }
         public string Tags { get; set; }
     }
