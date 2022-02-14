@@ -21,6 +21,8 @@ namespace Fluff.Classes
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         public Post PostToDownload { get; set; }
+        public string FileName { get; set; }
+        public string FolderName { get; set; }
         private SolidColorBrush progressColor;
         public SolidColorBrush ProgressColor
         {

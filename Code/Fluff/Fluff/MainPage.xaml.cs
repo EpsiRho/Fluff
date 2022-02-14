@@ -48,13 +48,19 @@ namespace Fluff
         public MainPage()
         {
             this.InitializeComponent();
-            contentFrame.Navigate(typeof(PostsSearch));
+            PagesStack.ArgsStack = new List<PostNavigationArgs>();
+            PagesStack.ArgsStack.Add(new PostNavigationArgs()
+            {
+                ClickedPost = null,
+                Page = 1,
+                PostsList = null,
+                Tags = ""
+            });
+            contentFrame.Navigate(typeof(PostsSearch), PagesStack.ArgsStack.Count()-1, new DrillInNavigationTransitionInfo());
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
             ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
             titleBar.ButtonBackgroundColor = Colors.Transparent;
             titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-            PostNavigationArgs.Page = 1;
-            PostNavigationArgs.PostsList = new ObservableCollection<e6API.Post>();
             DownloadQueueModel = new ObservableCollection<DownloadQueueItem>();
             SelectedIndex = 0;
             host = new RequestHost(SettingsHandler.UserAgent);
@@ -271,10 +277,35 @@ namespace Fluff
         #region Topbar Functions
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
-            var MyFrame = contentFrame;
-            if (MyFrame.CanGoBack)
+            try
             {
-                MyFrame.GoBack(new DrillInNavigationTransitionInfo());
+                var MyFrame = contentFrame;
+                if (MyFrame.CanGoBack)
+                {
+                    PagesStack.ArgsStack.Remove(PagesStack.ArgsStack.Last());
+                    MyFrame.GoBack(new DrillInNavigationTransitionInfo());
+
+                    var postpage = MyFrame.Content as PostsSearch;
+                    if(postpage != null)
+                    {
+                        OpenPostsFull.Begin();
+                        ClosePoolsFull.Begin();
+                        CloseWikiFull.Begin();
+                        CloseUploadFull.Begin();
+                    }
+                    var poolpage = MyFrame.Content as PoolsSearch;
+                    if(poolpage != null)
+                    {
+                        ClosePostsFull.Begin();
+                        OpenPoolsFull.Begin();
+                        CloseWikiFull.Begin();
+                        CloseUploadFull.Begin();
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
             }
         }
         private void PostsButton_Click(object sender, RoutedEventArgs e)
@@ -283,7 +314,14 @@ namespace Fluff
             ClosePoolsFull.Begin();
             CloseWikiFull.Begin();
             CloseUploadFull.Begin();
-            contentFrame.Navigate(typeof(PostsSearch));
+            PagesStack.ArgsStack.Add(new PostNavigationArgs()
+            {
+                ClickedPost = null,
+                Page = 1,
+                PostsList = null,
+                Tags = ""
+            });
+            contentFrame.Navigate(typeof(PostsSearch), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
         }
         private void PostsButton_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
@@ -305,6 +343,14 @@ namespace Fluff
             OpenPoolsFull.Begin();
             CloseWikiFull.Begin();
             CloseUploadFull.Begin();
+            PagesStack.ArgsStack.Add(new PostNavigationArgs()
+            {
+                ClickedPost = null,
+                Page = 1,
+                PostsList = null,
+                Tags = ""
+            });
+            contentFrame.Navigate(typeof(PoolsSearch), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
         }
         private void PoolsButton_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
@@ -513,7 +559,25 @@ namespace Fluff
                 StorageFile file = null;
                 try
                 {
-                    file = await Windows.Storage.DownloadsFolder.CreateFileAsync(PostToSave.PostToDownload.file.md5 + "." + PostToSave.PostToDownload.file.ext);
+                    if (PostToSave.FolderName != "")
+                    {
+                        string foldername = PostToSave.FolderName;
+                        foldername = foldername.Replace(":", "");
+                        foldername = foldername.Replace("<", "");
+                        foldername = foldername.Replace(">", "");
+                        foldername = foldername.Replace("\"", "");
+                        foldername = foldername.Replace("\\", "");
+                        foldername = foldername.Replace("/", "");
+                        foldername = foldername.Replace("|", "");
+                        foldername = foldername.Replace("?", "");
+                        foldername = foldername.Replace("*", "");
+                        foldername = foldername.Replace("_", " ");
+                        file = await DownloadsFolder.CreateFileAsync($"{foldername}_{PostToSave.FileName}.{PostToSave.PostToDownload.file.ext}");
+                    }
+                    else
+                    {
+                        file = await DownloadsFolder.CreateFileAsync(PostToSave.FileName + "." + PostToSave.PostToDownload.file.ext);
+                    }
                 }
                 catch (Exception)
                 {

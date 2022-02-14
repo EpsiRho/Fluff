@@ -35,7 +35,7 @@ namespace Fluff.Pages
         public PoolViewPage()
         {
             this.InitializeComponent();
-            host = new RequestHost(SettingsHandler.UserAgent);
+            host = new RequestHost("Fluff/0.5 (by EpsilonRho)");
             PostsViewModel = new ObservableCollection<Post>();
         }
 

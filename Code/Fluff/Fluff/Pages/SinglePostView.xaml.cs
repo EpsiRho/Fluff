@@ -37,8 +37,10 @@ namespace Fluff.Pages
 
         #region Global Page Vars
         ObservableCollection<Post> PostsViewModel;
+        ObservableCollection<Pool> PoolsSource;
         CurrentPostNotif PostHandler;
         RequestHost host;
+        PostNavigationArgs args;
         string ClickedTag;
         #endregion Global Page Vars
 
@@ -54,12 +56,14 @@ namespace Fluff.Pages
             }
             PostsViewModel = new ObservableCollection<Post>();
             PostHandler = new CurrentPostNotif();
+            PoolsSource = new ObservableCollection<Pool>();
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            PostsViewModel = new ObservableCollection<Post>(PostNavigationArgs.PostsList);
-            PostFlipView.SelectedIndex = PostsViewModel.IndexOf(PostNavigationArgs.ClickedPost);
-            PostHandler.CurrentPost = PostNavigationArgs.ClickedPost;
+            args = PagesStack.ArgsStack[(int)e.Parameter];
+            PostsViewModel = new ObservableCollection<Post>(args.PostsList);
+            PostFlipView.SelectedIndex = PostsViewModel.IndexOf(args.ClickedPost);
+            PostHandler.CurrentPost = args.ClickedPost;
 
             Thread t = new Thread(SetVoteColors);
             t.Start();
@@ -106,16 +110,6 @@ namespace Fluff.Pages
                     FavoriteButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                 });
             }
-        }
-
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            PostNavigationArgs.ClickedPost = PostFlipView.SelectedItem as Post;
-            if (PostNavigationArgs.NeedsRefersh)
-            {
-                return;
-            }
-            
         }
         #endregion Page Loading Functions
 
@@ -213,10 +207,28 @@ namespace Fluff.Pages
             Thread t = new Thread(SetVoteColors);
             t.Start();
 
+            Thread g = new Thread(GetPools);
+            g.Start();
+
             ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation");
             if (animation != null)
             {
                 animation.TryStart(PostFlipView);
+            }
+        }
+        private async void GetPools()
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+            {
+                PoolsSource.Clear();
+            });
+            foreach (var pool in PostHandler.CurrentPost.pools) 
+            {
+                var info = await host.GetPoolInfo(pool);
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+                {
+                    PoolsSource.Add(info);
+                });
             }
         }
         #endregion Image and FlipView Interactions
@@ -346,39 +358,51 @@ namespace Fluff.Pages
         }
         private void AddTagToSearch(object sender, RoutedEventArgs e)
         {
-            if (PostNavigationArgs.Tags.Contains($"-{ClickedTag}"))
+            PostNavigationArgs NewArgs = new PostNavigationArgs();
+            NewArgs.Tags = args.Tags;
+            if (NewArgs.Tags.Contains($"-{ClickedTag}"))
             {
-                PostNavigationArgs.Tags.Replace($"-{ClickedTag}","");
+                NewArgs.Tags = NewArgs.Tags.Replace($"-{ClickedTag}","");
             }
 
-            if (PostNavigationArgs.Tags.Contains(ClickedTag))
+            if (NewArgs.Tags.Contains(ClickedTag))
             {
                 return;
             }
-            PostNavigationArgs.Tags += $" {ClickedTag}";
-            PostNavigationArgs.NeedsRefersh = true;
-            this.Frame.Navigate(typeof(PostsSearch), null, new EntranceNavigationTransitionInfo());
+            NewArgs.Tags += $" {ClickedTag}";
+            NewArgs.Page = 1;
+            args.ClickedPost = PostHandler.CurrentPost;
+            PagesStack.ArgsStack.Add(NewArgs);
+            this.Frame.Navigate(typeof(PostsSearch), PagesStack.ArgsStack.Count() - 1, new EntranceNavigationTransitionInfo());
         }
         private void SearchTag(object sender, RoutedEventArgs e)
         {
-            PostNavigationArgs.Tags = ClickedTag;
-            PostNavigationArgs.NeedsRefersh = true;
-            this.Frame.Navigate(typeof(PostsSearch), null, new EntranceNavigationTransitionInfo());
+            PostNavigationArgs NewArgs = new PostNavigationArgs();
+            NewArgs.Tags = ClickedTag;
+            NewArgs.Page = 1;
+            args.ClickedPost = PostHandler.CurrentPost;
+            PagesStack.ArgsStack.Add(NewArgs);
+
+            this.Frame.Navigate(typeof(PostsSearch), PagesStack.ArgsStack.Count() - 1, new EntranceNavigationTransitionInfo());
         }
         private void FliterTagFromSearch(object sender, RoutedEventArgs e)
         {
-            if (PostNavigationArgs.Tags.Contains($"{ClickedTag}"))
+            PostNavigationArgs NewArgs = new PostNavigationArgs();
+            NewArgs.Tags = args.Tags;
+            if (NewArgs.Tags.Contains($"{ClickedTag}"))
             {
-                PostNavigationArgs.Tags.Replace($"{ClickedTag}", "");
+                NewArgs.Tags = NewArgs.Tags.Replace($"{ClickedTag}", "");
             }
 
-            if (PostNavigationArgs.Tags.Contains($"-{ClickedTag}"))
+            if (NewArgs.Tags.Contains($"-{ClickedTag}"))
             {
                 return;
             }
-            PostNavigationArgs.Tags += $" -{ClickedTag}";
-            PostNavigationArgs.NeedsRefersh = true;
-            this.Frame.Navigate(typeof(PostsSearch), null, new EntranceNavigationTransitionInfo());
+            NewArgs.Tags += $" -{ClickedTag}";
+            NewArgs.Page = 1;
+            args.ClickedPost = PostHandler.CurrentPost;
+            PagesStack.ArgsStack.Add(NewArgs);
+            this.Frame.Navigate(typeof(PostsSearch), PagesStack.ArgsStack.Count() - 1, new EntranceNavigationTransitionInfo());
         }
         private void FavoriteTag(object sender, RoutedEventArgs e)
         {
@@ -400,7 +424,7 @@ namespace Fluff.Pages
         {
             var grid = ((Grid)this.Frame.Parent).Parent as Grid;
             var page = (MainPage)grid.Parent;
-            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = PostHandler.CurrentPost});
+            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = PostHandler.CurrentPost, FileName = PostHandler.CurrentPost.file.md5, FolderName = ""});
         }
         private void CopyPostLink_Click(object sender, RoutedEventArgs e)
         {
@@ -524,6 +548,17 @@ namespace Fluff.Pages
                 PostHandler.CurrentPost.is_favorited = false;
                 PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].is_favorited = false;
             }
+        }
+
+        private void PoolsListView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            PostNavigationArgs NewArgs = new PostNavigationArgs();
+            NewArgs.Page = 1;
+            NewArgs.ClickedPool = (Pool)e.ClickedItem;
+            NewArgs.Tags = args.Tags;
+            PagesStack.ArgsStack.Add(NewArgs);
+
+            this.Frame.Navigate(typeof(PoolViewPage), PagesStack.ArgsStack.Count()-1, new DrillInNavigationTransitionInfo());
         }
     }
 }

@@ -135,6 +135,12 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PoolsSearch.xaml.cs">
+      <DependentUpon>PoolsSearch.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PoolViewPage.xaml.cs">
+      <DependentUpon>PoolViewPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\PostsSearch.xaml.cs">
       <DependentUpon>PostsSearch.xaml</DependentUpon>
     </Compile>
@@ -216,6 +222,14 @@
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PoolsSearch.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PoolViewPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\PostsSearch.xaml">
       <SubType>Designer</SubType>

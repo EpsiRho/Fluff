@@ -44,42 +44,32 @@ namespace Fluff.Pages
         string TagToSearch;
         // If tags can be searched for
         bool CanGetTags;
+        PostNavigationArgs args;
         #endregion Global Page Vars
 
         #region Page Loading Functions
         public PostsSearch()
         {
             this.InitializeComponent();
-<<<<<<< Updated upstream
             host = new RequestHost("Fluff/0.5 (by EpsilonRho)"); // Initialize the api host
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled; // Set page chache, this needs to change.
-=======
-            host = new RequestHost(SettingsHandler.UserAgent); // Initialize the api host
->>>>>>> Stashed changes
             PostsViewModel = new ObservableCollection<Post>(); // Initialize the post holder
             CanGetTags = true; // set this to start as true
-
-            // Start the inital search
             CanSearch = true;
-            StartSearch();
-            PageText.Text = "1";
-
-
+            //StartSearch();
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            // This is going to have to change.
-            if (PostNavigationArgs.NeedsRefersh)
+            args = PagesStack.ArgsStack[(int)e.Parameter];
+            SearchBox.Text = args.Tags;
+            PageText.Text = args.Page.ToString();
+            if (args.PostsList == null)
             {
-                SearchBox.Text = PostNavigationArgs.Tags;
-                PostNavigationArgs.Page = 1;
-                PostsViewModel.Clear();
-                PageText.Text = "1";
-
                 StartSearch();
-                return;
             }
-
+            else
+            {
+                PostsViewModel = new ObservableCollection<Post>(args.PostsList);
+            }
         }
         
 
@@ -90,14 +80,16 @@ namespace Fluff.Pages
         {
             // Get the post and setup the post nav args. this will need to change eventually
             Post p = e.ClickedItem as Post;
-            PostNavigationArgs.ClickedPost = p;
-            PostNavigationArgs.PostsList = PostsViewModel;
-            PostNavigationArgs.NeedsRefersh = false;
-            PostNavigationArgs.Tags = SearchBox.Text;
-            PostNavigationArgs.PostsList = new ObservableCollection<Post>(PostsViewModel);
+            PostNavigationArgs NewArgs = new PostNavigationArgs();
+            NewArgs.ClickedPost = p;
+            NewArgs.Page = args.Page;
+            NewArgs.Tags = SearchBox.Text;
+            args.PostsList = new ObservableCollection<Post>(PostsViewModel);
+            NewArgs.PostsList = new ObservableCollection<Post>(PostsViewModel);
+            PagesStack.ArgsStack.Add(NewArgs);
 
             // Start navigation
-            this.Frame.Navigate(typeof(SinglePostView), null, new DrillInNavigationTransitionInfo());
+            this.Frame.Navigate(typeof(SinglePostView), PagesStack.ArgsStack.Count()-1, new DrillInNavigationTransitionInfo());
         }
         private void GridViewItem_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
@@ -165,7 +157,7 @@ namespace Fluff.Pages
             }
 
             // Get Posts
-            var posts = await host.GetPosts(tags, count, PostNavigationArgs.Page);
+            var posts = await host.GetPosts(tags, count, args.Page);
             if(posts == null)
             {
                 return;
@@ -175,14 +167,14 @@ namespace Fluff.Pages
             // This is for when your navigating to the last page of a search, so it doesn't load an empty page.
             if(posts.Count == 0)
             {
-                if (PostNavigationArgs.Page > 1)
+                if (args.Page > 1)
                 {
                     posts = PostsList.ToList();
-                    PostNavigationArgs.Page--;
+                    args.Page--;
                 }
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    PageText.Text = PostNavigationArgs.Page.ToString();
+                    PageText.Text = args.Page.ToString();
                 });
             }
 
@@ -273,7 +265,7 @@ namespace Fluff.Pages
             if (e.Key == Windows.System.VirtualKey.Enter)
             {
                 SearchTagAutoComplete.Items.Clear();
-                PostNavigationArgs.Page = 1;
+                args.Page = 1;
                 StartSearch();
             }
         }
@@ -348,14 +340,22 @@ namespace Fluff.Pages
         }
         private void SearchButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            PostNavigationArgs.Page = 1;
+            if (!CanSearch)
+            {
+                return;
+            }
+            args.Page = 1;
             SearchBox.Text += " ";
             SearchTagAutoComplete.Items.Clear();
             StartSearch();
         }
         private void SortSelection_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            PostNavigationArgs.Page = 1;
+            if (!CanSearch)
+            {
+                return;
+            }
+            args.Page = 1;
             StartSearch();
         }
         private void DownloadMultiple_Click(object sender, RoutedEventArgs e)
@@ -387,15 +387,15 @@ namespace Fluff.Pages
             {
                 return;
             }
-            if (PostNavigationArgs.Page > 1)
+            if (args.Page > 1)
             {
-                PostNavigationArgs.Page--;
+                args.Page--;
                 StartSearch();
             }
         }
         private void RightNav_Click(object sender, RoutedEventArgs e)
         {
-            PostNavigationArgs.Page++;
+            args.Page++;
             StartSearch();
         }
         #endregion Left Bar Interactions
@@ -413,7 +413,7 @@ namespace Fluff.Pages
             SortSelection.IsEnabled = false;
             LeftNav.IsEnabled = false;
             RightNav.IsEnabled = false;
-            PageText.Text = PostNavigationArgs.Page.ToString();
+            PageText.Text = args.Page.ToString();
             Thread t = new Thread(GetPosts);
             t.Start(new ObservableCollection<Post>(PostsViewModel));
             PostsViewModel.Clear();
@@ -436,7 +436,7 @@ namespace Fluff.Pages
                     {
                         if (PostsViewModel.Count > 0)
                         {
-                            PostNavigationArgs.Page++;
+                            args.Page++;
                             StartSearch();
                         }
                     }
@@ -449,9 +449,9 @@ namespace Fluff.Pages
                 {
                     try
                     {
-                        if (PostNavigationArgs.Page != 1)
+                        if (args.Page != 1)
                         {
-                            PostNavigationArgs.Page--;
+                            args.Page--;
                             StartSearch();
                         }
                     }
