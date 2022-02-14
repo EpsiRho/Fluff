@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,10 +57,17 @@ namespace Fluff
             PostNavigationArgs.PostsList = new ObservableCollection<e6API.Post>();
             DownloadQueueModel = new ObservableCollection<DownloadQueueItem>();
             SelectedIndex = 0;
-            host = new RequestHost("Fluff/0.4 (by EpsilonRho)");
+            host = new RequestHost("Fluff/0.5 (by EpsilonRho)");
             GetSettings();
             SetSettingsUI();
             //CheckForUpdate();
+
+            SettingsHandler.VotedPosts = new Dictionary<int, bool>();
+            if (SettingsHandler.Username != "")
+            {
+                Thread t = new Thread(GetLikedPosts);
+                t.Start();
+            }
         }
 
         #region Settings Functions
@@ -162,6 +170,8 @@ namespace Fluff
         }
         private async void GetBlacklistTags()
         {
+            host.Username = SettingsHandler.Username;
+            host.ApiKey = SettingsHandler.ApiKey;
             var users = await host.SearchUsers(SettingsHandler.Username, 1);
             string[] tags = users[0].blacklisted_tags.Split(" ");
             CurrentUser = users[0];
@@ -199,7 +209,7 @@ namespace Fluff
             string id = CurrentUser.id.ToString();
 
             var check = await host.UpdateUserBlacklist(id, SettingsHandler.Username, SettingsHandler.ApiKey, tags.Replace("\n", "\\n"));
-            if (check)
+            if (!check)
             {
                 ShowSystemMessage("Couldn't Update Blacklist");
             }
@@ -235,6 +245,10 @@ namespace Fluff
                 SettingsHandler.ApiKey = a;
                 localSettings.Values["apikey"] = a;
                 UsernameSet.Text = u;
+                Thread th = new Thread(GetLikedPosts);
+                th.Start();
+                Thread t = new Thread(GetBlacklistTags);
+                t.Start();
             }
             else
             {
@@ -242,8 +256,6 @@ namespace Fluff
             }
             LoginProgress.Visibility = Visibility.Collapsed;
             BlacklistProgress.Visibility = Visibility.Visible;
-            Thread t = new Thread(GetBlacklistTags);
-            t.Start();
         }
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
@@ -262,7 +274,7 @@ namespace Fluff
             var MyFrame = contentFrame;
             if (MyFrame.CanGoBack)
             {
-                MyFrame.GoBack(new SuppressNavigationTransitionInfo());
+                MyFrame.GoBack(new DrillInNavigationTransitionInfo());
             }
         }
         private void PostsButton_Click(object sender, RoutedEventArgs e)
@@ -616,6 +628,108 @@ namespace Fluff
         }
         #endregion Image Saving
 
+        private async void GetLikedPosts()
+        {
+            LoadVotesFromFile();
+            host.Username = SettingsHandler.Username;
+            host.ApiKey = SettingsHandler.ApiKey;
+            int count = 1;
+            while (true)
+            {
+                // Get liked posts
+                var posts = await host.GetPosts($"votedup:{SettingsHandler.Username}", 75, count);
+
+                if(posts == null || posts.Count == 0)
+                {
+                    break;
+                }
+
+                foreach (var post in posts)
+                {
+                    bool needsBreak = false;
+                    try
+                    {
+                        SettingsHandler.VotedPosts.Add(post.id, true);
+                    }
+                    catch (Exception)
+                    {
+                        needsBreak = true;
+                    }
+                    if (needsBreak) { break; }
+                }
+                count++;
+            }
+            count = 1;
+            while (true) 
+            { 
+                // Get liked posts
+                var posts2 = await host.GetPosts($"voteddown:{SettingsHandler.Username}", 75, count);
+
+                if (posts2 == null || posts2.Count == 0)
+                {
+                    break;
+                }
+
+                foreach (var post in posts2)
+                {
+                    bool needsBreak = false;
+                    try
+                    {
+                        SettingsHandler.VotedPosts.Add(post.id, false);
+                    }
+                    catch (Exception)
+                    {
+                        needsBreak = true;
+                    }
+                    if (needsBreak) { break; }
+                }
+                count++;
+            }
+            SaveVotesToFile();
+            //ShowSystemMessage("Voted index complete");
+        }
+
+        private async void SaveVotesToFile()
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                var binaryFormatter = new BinaryFormatter();
+
+                binaryFormatter.Serialize(memoryStream, SettingsHandler.VotedPosts);
+
+                StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+                StorageFile file = await storageFolder.CreateFileAsync("LikedPosts.bin", CreationCollisionOption.ReplaceExisting);
+                var stream = await file.OpenStreamForWriteAsync();
+                stream.Write(memoryStream.ToArray(), 0, (int)memoryStream.Length);
+                stream.Flush();
+                stream.Close();
+            }
+
+        }
+
+        private async void LoadVotesFromFile()
+        {
+            try
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+                    StorageFile file = await storageFolder.GetFileAsync("LikedPosts.bin");
+                    var stream = await file.OpenStreamForReadAsync();
+
+                    var binaryFormatter = new BinaryFormatter();
+
+                    stream.CopyTo(memoryStream);
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+
+                    SettingsHandler.VotedPosts = (Dictionary<int, bool>)binaryFormatter.Deserialize(memoryStream);
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+        }
 
         // Unused update checker for github updates, but waiting on microsoft store review :D
         private async void CheckForUpdate()
@@ -633,7 +747,7 @@ namespace Fluff
             {
                 double latestNum = Convert.ToDouble(latest.TagName);
 
-                if (latestNum > 0.4)
+                if (latestNum > 0.5)
                 {
                     UpdateTitle.Text = latest.Name;
                     UpdateDescription.Text = latest.Body;

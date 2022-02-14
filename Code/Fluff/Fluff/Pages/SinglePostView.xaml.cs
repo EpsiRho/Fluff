@@ -38,6 +38,7 @@ namespace Fluff.Pages
         #region Global Page Vars
         ObservableCollection<Post> PostsViewModel;
         CurrentPostNotif PostHandler;
+        RequestHost host;
         string ClickedTag;
         #endregion Global Page Vars
 
@@ -45,6 +46,12 @@ namespace Fluff.Pages
         public SinglePostView()
         {
             this.InitializeComponent();
+            host = new RequestHost("Fluff/0.5 (by EpsilonRho)"); // Initialize the api host
+            if(SettingsHandler.Username != "")
+            {
+                host.Username = SettingsHandler.Username;
+                host.ApiKey = SettingsHandler.ApiKey;
+            }
             PostsViewModel = new ObservableCollection<Post>();
             PostHandler = new CurrentPostNotif();
         }
@@ -54,10 +61,50 @@ namespace Fluff.Pages
             PostFlipView.SelectedIndex = PostsViewModel.IndexOf(PostNavigationArgs.ClickedPost);
             PostHandler.CurrentPost = PostNavigationArgs.ClickedPost;
 
-            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation");
-            if (animation != null)
+            Thread t = new Thread(SetVoteColors);
+            t.Start();
+        }
+
+        private async void SetVoteColors()
+        {
+            if (PostHandler.CurrentPost.voted_up)
             {
-                animation.TryStart(PostFlipView);
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+                {
+                    LikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
+                    DislikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                });
+            }
+            else if (PostHandler.CurrentPost.voted_down)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+                {
+                    LikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                    DislikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                });
+            }
+            else
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+                {
+                    LikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                    DislikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                });
+            }
+
+            if (PostHandler.CurrentPost.is_favorited)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+                {
+                    FavoriteButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 94, 255, 255));
+                });
+            }
+            else
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+                {
+                    FavoriteButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                });
             }
         }
 
@@ -68,10 +115,7 @@ namespace Fluff.Pages
             {
                 return;
             }
-            var gridViewItem = PostFlipView.ContainerFromItem(PostFlipView.SelectedItem) as FlipViewItem;
-
-            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation", gridViewItem);
-           
+            
         }
         #endregion Page Loading Functions
 
@@ -84,13 +128,81 @@ namespace Fluff.Pages
         {
             HideControls.Begin();
         }
-        private void LikeButton_Click(object sender, RoutedEventArgs e)
+        private async void LikeButton_Click(object sender, RoutedEventArgs e)
         {
-
+            var x = await host.VotePost(PostHandler.CurrentPost.id, 1);
+            if(x == null)
+            {
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("You must be logged in to vote!");
+                return;
+            }
+            if (x.our_score == 1)
+            {
+                LikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
+                DislikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                bool vote;
+                if (SettingsHandler.VotedPosts.TryGetValue(PostHandler.CurrentPost.id, out vote))
+                {
+                    SettingsHandler.VotedPosts[PostHandler.CurrentPost.id] = true;
+                }
+                else
+                {
+                    SettingsHandler.VotedPosts.Add(PostHandler.CurrentPost.id, true);
+                }
+                PostHandler.CurrentPost.voted_up = true;
+                PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].voted_up = true;
+                PostHandler.CurrentPost.voted_down = false;
+                PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].voted_down = false;
+            }
+            else
+            {
+                LikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                SettingsHandler.VotedPosts.Remove(PostHandler.CurrentPost.id);
+                PostHandler.CurrentPost.voted_up = false;
+                PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].voted_up = false;
+            }
+            PostHandler.CurrentPost.score.up = x.up;
+            PostHandler.CurrentPost.score.down = x.down;
         }
-        private void AppBarButton_Click(object sender, RoutedEventArgs e)
+        private async void DislikeButton_Click(object sender, RoutedEventArgs e)
         {
-
+            var x = await host.VotePost(PostHandler.CurrentPost.id, -1);
+            if (x == null)
+            {
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("You must be logged in to vote!");
+                return;
+            }
+            if (x.our_score == -1)
+            {
+                LikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                DislikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                bool vote;
+                if (SettingsHandler.VotedPosts.TryGetValue(PostHandler.CurrentPost.id, out vote))
+                {
+                    SettingsHandler.VotedPosts[PostHandler.CurrentPost.id] = false;
+                }
+                else
+                {
+                    SettingsHandler.VotedPosts.Add(PostHandler.CurrentPost.id, false);
+                }
+                PostHandler.CurrentPost.voted_up = false;
+                PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].voted_up = false;
+                PostHandler.CurrentPost.voted_down = true;
+                PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].voted_down = true;
+            }
+            else
+            {
+                DislikeButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                SettingsHandler.VotedPosts.Remove(PostHandler.CurrentPost.id);
+                PostHandler.CurrentPost.voted_down = false;
+                PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].voted_down = false;
+            }
+            PostHandler.CurrentPost.score.up = x.up;
+            PostHandler.CurrentPost.score.down = x.down;
         }
         #endregion ToolBar Functions
 
@@ -98,6 +210,14 @@ namespace Fluff.Pages
         private void PostFlipView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             PostHandler.CurrentPost = e.AddedItems[0] as Post;
+            Thread t = new Thread(SetVoteColors);
+            t.Start();
+
+            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation");
+            if (animation != null)
+            {
+                animation.TryStart(PostFlipView);
+            }
         }
         #endregion Image and FlipView Interactions
 
@@ -375,11 +495,35 @@ namespace Fluff.Pages
             var player = sender as MediaElement;
             player.Visibility = Visibility.Collapsed;
         }
+
+
+
+
         #endregion Videoplayer Functions
 
-
-
-
-
+        private async void FavoriteButton_Click(object sender, RoutedEventArgs e)
+        {
+            if(SettingsHandler.Username == "")
+            {
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("You must be logged in to favorite!");
+                return;
+            }
+            var x = await host.FavoritePost(PostHandler.CurrentPost.id);
+            if (x)
+            {
+                FavoriteButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 94, 255, 255));
+                PostHandler.CurrentPost.is_favorited = true;
+                PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].is_favorited = true;
+            }
+            else
+            {
+                await host.UnfavoritePost(PostHandler.CurrentPost.id);
+                FavoriteButton.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                PostHandler.CurrentPost.is_favorited = false;
+                PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].is_favorited = false;
+            }
+        }
     }
 }

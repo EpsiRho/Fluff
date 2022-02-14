@@ -228,7 +228,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="e6API_EpsiRho">
-      <Version>0.4.7</Version>
+      <Version>0.4.8</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.13</Version>

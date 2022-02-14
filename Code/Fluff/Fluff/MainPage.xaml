@@ -306,7 +306,7 @@
                        PrimaryButtonClick="SettingsDialog_PrimaryButtonClick"
                        SecondaryButtonText="Close">
             <Grid  MinWidth="400">
-                <TextBlock Text="Fluff 0.4"
+                <TextBlock Text="Fluff 0.5"
                            HorizontalAlignment="Left"
                            Margin="1,-15,0,0"
                            VerticalAlignment="Top"/>
@@ -357,7 +357,7 @@
                                                       Visibility="Collapsed"
                                                       IsIndeterminate="True"/>
                                 </StackPanel>
-                                
+
                                 <StackPanel x:Name="LoggedInPanel"
                                             Visibility="Collapsed">
                                     <TextBlock Margin="10,0,10,5" 
@@ -400,9 +400,19 @@
                             <muxc:Expander.Header>
                                 <TextBlock Text="About" FontSize="18"/>
                             </muxc:Expander.Header>
-                            <TextBlock>
-                                Fluff by <Hyperlink NavigateUri="https://epsirho.github.io/">EpsiRho</Hyperlink>
-                            </TextBlock>
+                            <StackPanel>
+                                <TextBlock Text="Thanks for downloading Fluff!"
+                                           FontSize="24"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock TextWrapping="Wrap"
+                                           FontSize="18">
+                                    This is a beta, so there may be some issues. If you encounter a bug or have a suggestion let me know on <Hyperlink NavigateUri="https://github.com/EpsiRho/Fluff/issues">Github</Hyperlink>~
+                                </TextBlock>
+                                <TextBlock FontSize="18"
+                                           Margin="0,10,0,0">
+                                    Also check out my <Hyperlink NavigateUri="https://epsirho.github.io/">Website</Hyperlink> if you like my work ^^
+                                </TextBlock>
+                            </StackPanel>
                         </muxc:Expander>
                     </StackPanel>
                 </ScrollViewer>

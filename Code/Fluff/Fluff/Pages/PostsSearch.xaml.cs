@@ -76,15 +76,6 @@ namespace Fluff.Pages
                 return;
             }
 
-            // This gets the gridview item if there is one and uses it to animate the return to this page.
-            var gridViewItem = PostsView.ContainerFromItem(PostNavigationArgs.ClickedPost) as GridViewItem;
-
-            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation");
-            if (animation != null)
-            {
-               var fuck = animation.TryStart(gridViewItem);
-            }
-
         }
         
 
@@ -101,12 +92,8 @@ namespace Fluff.Pages
             PostNavigationArgs.Tags = SearchBox.Text;
             PostNavigationArgs.PostsList = new ObservableCollection<Post>(PostsViewModel);
 
-            // get the UI element and use it to start the animation
-            var gridViewItem = PostsView.ContainerFromItem(e.ClickedItem) as GridViewItem;
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation", gridViewItem);
-
             // Start navigation
-            this.Frame.Navigate(typeof(SinglePostView), null, new SuppressNavigationTransitionInfo());
+            this.Frame.Navigate(typeof(SinglePostView), null, new DrillInNavigationTransitionInfo());
         }
         private void GridViewItem_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
@@ -203,6 +190,19 @@ namespace Fluff.Pages
                     //post.preview.url = "https://i.imgur.com/xH2ojWU.png";
                     continue;
                 }
+
+                bool vote = false;
+                if(SettingsHandler.VotedPosts.TryGetValue(post.id, out vote))
+                {
+                    if(vote)
+                    {
+                        post.voted_up = true;
+                    }
+                    else
+                    {
+                        post.voted_down = true;
+                    }
+                }
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     PostsViewModel.Add(post);
@@ -218,6 +218,7 @@ namespace Fluff.Pages
                 LeftNav.IsEnabled = true;
                 SortSelection.IsEnabled = true;
                 RightNav.IsEnabled = true;
+                SearchTagAutoComplete.Items.Clear();
             });
             CanSearch = true;
         }

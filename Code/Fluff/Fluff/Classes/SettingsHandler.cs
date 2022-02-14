@@ -17,5 +17,7 @@ namespace Fluff.Classes
         public static bool ShowComments { get; set; }
         public static bool MuteVolume { get; set; }
         public static double PostCount { get; set; }
+        public static Dictionary<int, bool> VotedPosts { get; set; }
+
     }
 }

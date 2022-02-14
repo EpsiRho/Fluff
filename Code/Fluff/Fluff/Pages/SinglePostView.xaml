@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:eapi="using:e6API"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:classes="using:Fluff.Classes"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls" 
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
     xmlns:Interactivity="using:Microsoft.Xaml.Interactivity" 
@@ -54,7 +55,7 @@
         </Style>
         <Storyboard x:Name="ShowControls">
             <DoubleAnimation Duration="0:0:0.1"
-                             From="0.3"
+                             From="0.1"
                              To="1.0"
                              Storyboard.TargetProperty="Opacity"
                              Storyboard.TargetName="CustomBarBrush"/>
@@ -62,7 +63,7 @@
         <Storyboard x:Name="HideControls">
             <DoubleAnimation Duration="0:0:0.1"
                              From="1.0"
-                             To="0.3"
+                             To="0.1"
                              Storyboard.TargetProperty="Opacity"
                              Storyboard.TargetName="CustomBarBrush"/>
         </Storyboard>
@@ -76,9 +77,9 @@
         <ScrollViewer>
             <StackPanel>
                 <HyperlinkButton x:Name="ArtistsTitle" 
-                             Foreground="White" 
-                             Margin="0,0,0,0" 
-                             Click="Title_Click">
+                                 Foreground="White" 
+                                 Margin="0,0,0,0" 
+                                 Click="Title_Click">
                     <HyperlinkButton.Content>
                         <TextBlock Text="Artist:"
                                    FontSize="24"
@@ -284,9 +285,9 @@
                                                x:Name="ImageLoadProgress"
                                                RelativePanel.AlignHorizontalCenterWith="FlipViewPipsPager"
                                                VerticalAlignment="Center"/>
-                            <Image Source="{x:Bind file.url}"
+                            <controls:ImageEx Source="{x:Bind file.url}"
                                    x:Name="CurrentImage">
-                                <Image.ContextFlyout>
+                                <controls:ImageEx.ContextFlyout>
                                     <MenuFlyout>
                                         <MenuFlyoutItem Text="Copy Image"
                                                         Click="CopyImage_Click"/>
@@ -299,13 +300,14 @@
                                                             Click="CopyDirectLink_Click"/>
                                         </MenuFlyoutSubItem>
                                     </MenuFlyout>
-                                </Image.ContextFlyout>
-                            </Image>
+                                </controls:ImageEx.ContextFlyout>
+                            </controls:ImageEx>
                             <MediaElement Source="{x:Bind file.url}"
                                           PosterSource="{x:Bind file.url}"
                                           AutoPlay="False"
                                           x:Name="VideoPlayer"
                                           IsLooping="True"
+                                          IsMuted="{x:Bind classes:SettingsHandler.MuteVolume}"
                                           MediaOpened="VideoPlayer_MediaOpened"
                                           MediaFailed="VideoPlayer_MediaFailed"
                                           Visibility="Collapsed"
@@ -330,9 +332,9 @@
                 </FlipView.ItemTemplate>
             </FlipView>
         </Border>
-        <Border HorizontalAlignment="Center"
+        <Border HorizontalAlignment="Left"
                 Grid.Column="1"
-                VerticalAlignment="Bottom"
+                VerticalAlignment="Top"
                 PointerEntered="MouseHoverHandler_PointerEntered"
                 PointerExited="MouseHoverHandler_PointerExited"
                 CornerRadius="10"
@@ -343,7 +345,7 @@
             </Border.RenderTransform>
             <Grid>
                 <Border x:Name="CustomBarBrush"
-                        Opacity="0.3">
+                        Opacity="0.1">
                     <Border.Background>
                         <AcrylicBrush BackgroundSource="Backdrop"
                                       TintOpacity="1"
@@ -354,24 +356,70 @@
                 <StackPanel Orientation="Horizontal"
                             VerticalAlignment="Top"
                             Margin="0,-5,0,0">
-                    <AppBarButton x:Name="LibraryButton" 
-                                  Height="50"
-                                  Foreground="White"
-                                  Icon="Library">
-                        <AppBarButton.Flyout>
-                            <MenuFlyout>
+                    <Button x:Name="LibraryButton" 
+                            Height="50"
+                            Foreground="White">
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
                             </MenuFlyout>
-                        </AppBarButton.Flyout>
-                    </AppBarButton>
-                    <AppBarButton Icon="Like" 
-                                  Height="50"
-                                  Foreground="White"
-                                  Click="LikeButton_Click"
-                                  x:Name="LikeButton"/>
-                    <AppBarButton Icon="Dislike" 
-                                  Click="AppBarButton_Click"
-                                  Foreground="White"
-                                  Height="50"/>
+                        </Button.Flyout>
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                          Glyph="&#xE158;"
+                                          FontWeight="SemiBold"
+                                          FontSize="18"
+                                          Margin="0,0,0,0"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                    <Button Height="50"
+                            Click="FavoriteButton_Click"
+                            Foreground="White">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                          Glyph="&#xE1CE;"
+                                          x:Name="FavoriteButton"
+                                          FontWeight="SemiBold"
+                                          FontSize="18"
+                                          Margin="0,0,0,0"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                    <Button Height="50"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Click="LikeButton_Click">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                          Glyph="&#xE19F;" 
+                                          FontSize="18"
+                                          x:Name="LikeButton"
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,5,0"/>
+                                <TextBlock Text="{x:Bind PostHandler.CurrentPost.score.up, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                           FontSize="18"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                    <Button Click="DislikeButton_Click"
+                            Foreground="White"
+                            Height="50">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                          Glyph="&#xE19E;" 
+                                          x:Name="DislikeButton"
+                                          FontSize="18"
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,5,0"/>
+                                <TextBlock Text="{x:Bind PostHandler.CurrentPost.score.down}"
+                                           FontSize="18"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
