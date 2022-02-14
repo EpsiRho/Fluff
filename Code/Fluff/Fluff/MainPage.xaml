@@ -306,7 +306,7 @@
                        PrimaryButtonClick="SettingsDialog_PrimaryButtonClick"
                        SecondaryButtonText="Close">
             <Grid  MinWidth="400">
-                <TextBlock Text="Fluff 0.5"
+                <TextBlock Text="{x:Bind classes:SettingsHandler.UserAgent}"
                            HorizontalAlignment="Left"
                            Margin="1,-15,0,0"
                            VerticalAlignment="Top"/>

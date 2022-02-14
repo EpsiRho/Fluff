@@ -46,7 +46,7 @@ namespace Fluff.Pages
         public SinglePostView()
         {
             this.InitializeComponent();
-            host = new RequestHost("Fluff/0.5 (by EpsilonRho)"); // Initialize the api host
+            host = new RequestHost(SettingsHandler.UserAgent); // Initialize the api host
             if(SettingsHandler.Username != "")
             {
                 host.Username = SettingsHandler.Username;

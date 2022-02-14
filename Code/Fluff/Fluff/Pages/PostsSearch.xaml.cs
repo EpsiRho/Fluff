@@ -50,8 +50,12 @@ namespace Fluff.Pages
         public PostsSearch()
         {
             this.InitializeComponent();
+<<<<<<< Updated upstream
             host = new RequestHost("Fluff/0.5 (by EpsilonRho)"); // Initialize the api host
             this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled; // Set page chache, this needs to change.
+=======
+            host = new RequestHost(SettingsHandler.UserAgent); // Initialize the api host
+>>>>>>> Stashed changes
             PostsViewModel = new ObservableCollection<Post>(); // Initialize the post holder
             CanGetTags = true; // set this to start as true
 

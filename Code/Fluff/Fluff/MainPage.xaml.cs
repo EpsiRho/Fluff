@@ -57,7 +57,7 @@ namespace Fluff
             PostNavigationArgs.PostsList = new ObservableCollection<e6API.Post>();
             DownloadQueueModel = new ObservableCollection<DownloadQueueItem>();
             SelectedIndex = 0;
-            host = new RequestHost("Fluff/0.5 (by EpsilonRho)");
+            host = new RequestHost(SettingsHandler.UserAgent);
             GetSettings();
             SetSettingsUI();
             //CheckForUpdate();
