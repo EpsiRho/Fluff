@@ -85,14 +85,14 @@
                              Storyboard.TargetName="CommentsPaneTrans"/>
         </Storyboard>
         <Storyboard x:Name="ShowToolBar">
-            <DoubleAnimation Duration="0:0:0.25"
-                             To="290"
+            <DoubleAnimation Duration="0:0:0.1"
+                             To="282"
                              EnableDependentAnimation="True"
                              Storyboard.TargetProperty="Width"
                              Storyboard.TargetName="PostToolBar"/>
         </Storyboard>
         <Storyboard x:Name="HideToolBar">
-            <DoubleAnimation Duration="0:0:0.25"
+            <DoubleAnimation Duration="0:0:0.1"
                              To="45"
                              EnableDependentAnimation="True"
                              Storyboard.TargetProperty="Width"
@@ -428,9 +428,8 @@
                             <StackPanel Orientation="Horizontal">
                                 <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                           Glyph="&#xE158;"
-                                          FontWeight="SemiBold"
                                           FontSize="18"
-                                          Margin="0,0,0,0"/>
+                                          Margin="0,5,0,0"/>
                             </StackPanel>
                         </Button.Content>
                     </Button>
@@ -442,9 +441,8 @@
                                 <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                           Glyph="&#xE1CE;"
                                           x:Name="FavoriteButton"
-                                          FontWeight="SemiBold"
                                           FontSize="18"
-                                          Margin="0,0,0,0"/>
+                                          Margin="0,5,0,0"/>
                             </StackPanel>
                         </Button.Content>
                     </Button>
@@ -458,10 +456,10 @@
                                           Glyph="&#xE19F;" 
                                           FontSize="18"
                                           x:Name="LikeButton"
-                                          FontWeight="SemiBold"
-                                          Margin="0,0,5,0"/>
+                                          Margin="0,5,5,0"/>
                                 <TextBlock Text="{x:Bind PostHandler.CurrentPost.score.up, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                           FontSize="18"/>
+                                           FontSize="18"
+                                           Margin="0,5,0,0"/>
                             </StackPanel>
                         </Button.Content>
                     </Button>
@@ -474,10 +472,10 @@
                                           Glyph="&#xE19E;" 
                                           x:Name="DislikeButton"
                                           FontSize="18"
-                                          FontWeight="SemiBold"
-                                          Margin="0,0,5,0"/>
+                                          Margin="0,5,5,0"/>
                                 <TextBlock Text="{x:Bind PostHandler.CurrentPost.score.down, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                           FontSize="18"/>
+                                           FontSize="18"
+                                           Margin="0,5,0,0"/>
                             </StackPanel>
                         </Button.Content>
                     </Button>
@@ -489,8 +487,7 @@
                                 <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                           Glyph="&#xE134;" 
                                           FontSize="18"
-                                          FontWeight="SemiBold"
-                                          Margin="0,0,5,0"/>
+                                          Margin="0,5,0,0"/>
                             </StackPanel>
                         </Button.Content>
                     </Button>
