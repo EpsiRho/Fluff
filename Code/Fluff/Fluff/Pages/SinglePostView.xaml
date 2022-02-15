@@ -11,10 +11,15 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls" 
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
     xmlns:Interactivity="using:Microsoft.Xaml.Interactivity" 
-    xmlns:Interactions="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:Interactions="using:Microsoft.Xaml.Interactions.Core" xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations"
     mc:Ignorable="d"
     Background="Transparent">
     <Page.Resources>
+        <AcrylicBrush x:Name="CustomeAcrylicBrush"
+                      BackgroundSource="Backdrop"
+                      TintOpacity="0.9"
+                      TintColor="Black" 
+                      FallbackColor="{ThemeResource SystemAltLowColor}"/>
         <Style TargetType="controls:GridSplitter">
             <Setter Property="IsTabStop" Value="True" />
             <Setter Property="UseSystemFocusVisuals" Value="True" />
@@ -66,6 +71,32 @@
                              To="0.1"
                              Storyboard.TargetProperty="Opacity"
                              Storyboard.TargetName="CustomBarBrush"/>
+        </Storyboard>
+        <Storyboard x:Name="ShowCommentsPane">
+            <DoubleAnimation Duration="0:0:0.25"
+                             To="0"
+                             Storyboard.TargetProperty="Y"
+                             Storyboard.TargetName="CommentsPaneTrans"/>
+        </Storyboard>
+        <Storyboard x:Name="HideCommentsPane">
+            <DoubleAnimation Duration="0:0:0.25"
+                             To="4000"
+                             Storyboard.TargetProperty="Y"
+                             Storyboard.TargetName="CommentsPaneTrans"/>
+        </Storyboard>
+        <Storyboard x:Name="ShowToolBar">
+            <DoubleAnimation Duration="0:0:0.25"
+                             To="290"
+                             EnableDependentAnimation="True"
+                             Storyboard.TargetProperty="Width"
+                             Storyboard.TargetName="PostToolBar"/>
+        </Storyboard>
+        <Storyboard x:Name="HideToolBar">
+            <DoubleAnimation Duration="0:0:0.25"
+                             To="45"
+                             EnableDependentAnimation="True"
+                             Storyboard.TargetProperty="Width"
+                             Storyboard.TargetName="PostToolBar"/>
         </Storyboard>
     </Page.Resources>
     <Grid>
@@ -285,8 +316,8 @@
                                                x:Name="ImageLoadProgress"
                                                RelativePanel.AlignHorizontalCenterWith="FlipViewPipsPager"
                                                VerticalAlignment="Center"/>
-                            <controls:ImageEx Source="{x:Bind file.url}"
-                                   x:Name="CurrentImage">
+                            <controls:ImageEx Source="{x:Bind sample.url}"
+                                              x:Name="CurrentImage">
                                 <controls:ImageEx.ContextFlyout>
                                     <MenuFlyout>
                                         <MenuFlyoutItem Text="Copy Image"
@@ -302,8 +333,8 @@
                                     </MenuFlyout>
                                 </controls:ImageEx.ContextFlyout>
                             </controls:ImageEx>
-                            <MediaElement Source="{x:Bind file.url}"
-                                          PosterSource="{x:Bind file.url}"
+                            <MediaElement Source="{x:Bind sample.url}"
+                                          PosterSource="{x:Bind sample.url}"
                                           AutoPlay="False"
                                           x:Name="VideoPlayer"
                                           IsLooping="True"
@@ -339,10 +370,9 @@
                 PointerExited="MouseHoverHandler_PointerExited"
                 CornerRadius="10"
                 Height="40"
+                x:Name="PostToolBar"
+                Width="45"
                 Margin="10">
-            <Border.RenderTransform>
-                <TranslateTransform x:Name="ControlsTrans" Y="0"/>
-            </Border.RenderTransform>
             <Grid>
                 <Border x:Name="CustomBarBrush"
                         Opacity="0.1">
@@ -356,6 +386,20 @@
                 <StackPanel Orientation="Horizontal"
                             VerticalAlignment="Top"
                             Margin="0,-5,0,0">
+                    <Button x:Name="MoreButton" 
+                            Height="50"
+                            Click="MoreButton_Click"
+                            Foreground="White">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                          Glyph="&#xE10C;"
+                                          FontWeight="SemiBold"
+                                          FontSize="18"
+                                          Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
                     <Button x:Name="LibraryButton" 
                             Height="50"
                             Foreground="White">
@@ -432,12 +476,96 @@
                                           FontSize="18"
                                           FontWeight="SemiBold"
                                           Margin="0,0,5,0"/>
-                                <TextBlock Text="{x:Bind PostHandler.CurrentPost.score.down}"
+                                <TextBlock Text="{x:Bind PostHandler.CurrentPost.score.down, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                            FontSize="18"/>
                             </StackPanel>
                         </Button.Content>
                     </Button>
+                    <Button Click="CommentsButton_Click"
+                            Foreground="White"
+                            Height="50">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                          Glyph="&#xE134;" 
+                                          FontSize="18"
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,5,0"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
                 </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="1"
+                Background="{StaticResource CustomeAcrylicBrush}"
+                CornerRadius="10,10,0,0"
+                Margin="0,0,0,0">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="CommentsPaneTrans"
+                                    Y="4000"/>
+            </Border.RenderTransform>
+            <Grid>
+                <Button x:Name="CloseCommentsButton"
+                        Click="CloseCommentsButton_Click"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Canvas.ZIndex="10"
+                        Margin="10,10,0,0">
+                    <SymbolIcon Symbol="Cancel"/>
+                </Button>
+                <ScrollViewer>
+                    <StackPanel>
+                        <TextBlock Text="Comments:"
+                                   FontSize="32"
+                                   Margin="0,5,0,0"
+                                   HorizontalAlignment="Center"/>
+                        <muxc:ProgressBar x:Name="CommentsProgress"
+                                          HorizontalAlignment="Stretch"
+                                          IsIndeterminate="True"/>
+                        <Grid>
+                            <TextBox VerticalAlignment="Top"
+                                     AcceptsReturn="True"
+                                     MaxHeight="150"
+                                     x:Name="CommentTextBox"
+                                     Margin="60,20,150,0"/>
+                            <Button HorizontalAlignment="Right"
+                                    Content="Comment"
+                                    x:Name="PostCommentButton"
+                                    Click="PostCommentButton_Click"
+                                    Margin="0,20,60,0"/>
+                        </Grid>
+                        <ListView x:Name="CommentsListView"
+                                  Margin="0,10,0,0"
+                                  IsItemClickEnabled="True"
+                                  SelectionMode="None"
+                                  ItemsSource="{x:Bind CommentSource}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="eapi:Comment">
+                                    <ListViewItem>
+                                        <StackPanel>
+                                            <TextBlock TextWrapping="Wrap"
+                                                       Margin="0,10,0,0"
+                                                       FontSize="18" >
+                                                <Run Text="{x:Bind creator_name}"
+                                                     TextDecorations="Underline"/>
+                                                <Run Text="{x:Bind updated_at}"
+                                                     TextDecorations="None"
+                                                     FontSize="14"/>
+                                            </TextBlock>
+                                            <controls:MarkdownTextBlock TextWrapping="Wrap"
+                                                                        Background="Transparent"
+                                                                        Margin="0,0,0,10"
+                                                                        FontSize="16"
+                                                                        Text="{x:Bind body}"/>
+                                        </StackPanel>
+                                    </ListViewItem>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Border>
     </Grid>

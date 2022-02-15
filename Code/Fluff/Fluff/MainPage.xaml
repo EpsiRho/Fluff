@@ -183,7 +183,7 @@
                               PointerEntered="PoolsButton_PointerEntered"
                               PointerExited="PoolsButton_PointerExited"/>
                 <AppBarButton Icon="View" 
-                              Label="Wiki"
+                              Label="Sets"
                               IsEnabled="False"
                               x:Name="WikiButton"
                               Canvas.ZIndex="1"

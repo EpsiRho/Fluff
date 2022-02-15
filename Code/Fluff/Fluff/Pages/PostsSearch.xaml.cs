@@ -84,6 +84,7 @@ namespace Fluff.Pages
             NewArgs.ClickedPost = p;
             NewArgs.Page = args.Page;
             NewArgs.Tags = SearchBox.Text;
+            args.Tags = SearchBox.Text;
             args.PostsList = new ObservableCollection<Post>(PostsViewModel);
             NewArgs.PostsList = new ObservableCollection<Post>(PostsViewModel);
             PagesStack.ArgsStack.Add(NewArgs);
@@ -122,7 +123,10 @@ namespace Fluff.Pages
             });
 
             // Get max Rating
-            tags += $" rating:{SettingsHandler.Rating}";
+            if (SettingsHandler.Rating == "safe")
+            {
+                tags += $" rating:safe";
+            }
 
             // Get Modifiers from combobox
             string modifier = "";
@@ -407,6 +411,7 @@ namespace Fluff.Pages
             {
                 return;
             }
+            SearchBox.IsEnabled = true;
             SearchButtonPanel.Visibility = Visibility.Collapsed;
             SearchProgress.Visibility = Visibility.Visible;
             SearchButton.IsEnabled = false;
@@ -469,5 +474,121 @@ namespace Fluff.Pages
         }
         #endregion
 
+        private void RecommendButton_Click(object sender, RoutedEventArgs e)
+        {
+            if(SettingsHandler.Username == "")
+            {
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("You need to be logged in to use this feature");
+                return;
+            }
+
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var str = (string)localSettings.Values["SeenRecommendInfo"];
+            if (str == null)
+            {
+                localSettings.Values["SeenRecommendInfo"] = "Seen";
+                RecommendedPanel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                Thread t = new Thread(GetRecommended);
+                t.Start();
+
+            }
+        }
+
+        private async void GetRecommended()
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                SearchBox.IsEnabled = false;
+                SearchButtonPanel.Visibility = Visibility.Collapsed;
+                SearchProgress.Visibility = Visibility.Visible;
+                SearchTagAutoComplete.Items.Clear();
+                SearchButton.IsEnabled = false;
+                SortSelection.IsEnabled = false;
+                LeftNav.IsEnabled = false;
+                RightNav.IsEnabled = false;
+                PageText.Text = "R";
+                PostsViewModel.Clear();
+            });
+
+            var posts = await host.GetPosts($"votedup:{SettingsHandler.Username}", 300);
+
+            Dictionary<string, int> Counts = new Dictionary<string, int>();
+            foreach (var post in posts)
+            {
+                foreach(var tag in post.tags.general)
+                {
+                    var check = Counts.TryAdd(tag, 1);
+                    if (!check)
+                    {
+                        Counts[tag]++;
+                    }
+                }
+                foreach (var tag in post.tags.character)
+                {
+                    var check = Counts.TryAdd(tag, 1);
+                    if (!check)
+                    {
+                        Counts[tag]++;
+                    }
+                }
+                foreach (var tag in post.tags.copyright)
+                {
+                    var check = Counts.TryAdd(tag, 1);
+                    if (!check)
+                    {
+                        Counts[tag]++;
+                    }
+                }
+                foreach (var tag in post.tags.artist)
+                {
+                    var check = Counts.TryAdd(tag, 1);
+                    if (!check)
+                    {
+                        Counts[tag]++;
+                    }
+                }
+            }
+            
+            var sortedDict = from entry in Counts orderby entry.Value descending select entry;
+
+            var sortedList = sortedDict.ToList();
+
+            string tags = "";
+
+            Random rand = new Random();
+
+            for (int i = 0; i < 10; i++)
+            {
+                tags += $"~{sortedList[rand.Next(sortedList.Count/3)].Key} ";
+            }
+
+            tags += " order:random";
+            
+            // Get max Rating
+            if (SettingsHandler.Rating == "safe")
+            {
+                tags += $" rating:safe";
+            }
+
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                SearchBox.Text = tags;
+                args.Tags = tags;
+                PageText.Text = "R";
+                SearchTagAutoComplete.Items.Clear();
+                PostsViewModel.Clear();
+                StartSearch();
+            });
+        }
+
+        private void RecommendPanelOkay_Click(object sender, RoutedEventArgs e)
+        {
+            RecommendedPanel.Visibility = Visibility.Collapsed;
+        }
     }
 }

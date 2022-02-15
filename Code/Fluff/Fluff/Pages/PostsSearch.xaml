@@ -81,7 +81,7 @@
                              TextWrapping="NoWrap"
                              TextChanged="SearchBox_TextChanged"
                              Margin="10,10,10,10"/>
-                    
+
                     <!-- List that shows autocomplete suggestions when typing -->
                     <ListView x:Name="SearchTagAutoComplete" 
                               Visibility="Visible" 
@@ -138,6 +138,11 @@
                                   Content="Download Multiple"
                                   Click="DownloadMultiple_Click"
                                   HorizontalAlignment="Center"/>
+                    <Button x:Name="RecommendButton"
+                            Content="See Recommended"
+                            Margin="0,10,0,0"
+                            Click="RecommendButton_Click"
+                            HorizontalAlignment="Center"/>
                 </StackPanel>
                 
                 <!-- Page Navigation Buttons-->
@@ -282,5 +287,49 @@
             </Grid>
         </Border>
 
+
+
+        <Border Background="{ThemeResource SystemAltMediumColor}"
+                Grid.ColumnSpan="2"
+                Visibility="Collapsed"
+                x:Name="RecommendedPanel">
+            <Border HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                    CornerRadius="20"
+                    Width="600"
+                    Height="400">
+                <Grid>
+                    <StackPanel Width="500">
+                        <TextBlock Text="Recommended Posts"
+                                   FontSize="24"
+                                   Margin="0,10,0,0"
+                                   TextAlignment="Center"/>
+                        <TextBlock Text="This feature will look at your liked posts and try to determine posts you might like!"
+                                   FontSize="18"
+                                   TextWrapping="Wrap"
+                                   Margin="10,10,10,0"
+                                   TextAlignment="Left"/>
+                        <TextBlock Text="None of this data is saved or used elsewhere, it just looks for common tags to fill out a search result for you~"
+                                   FontSize="18"
+                                   TextWrapping="Wrap"
+                                   Margin="10,10,10,0"
+                                   TextAlignment="Left"/>
+                        <TextBlock Text="This dialog will only show once, it's just to inform you about this feature."
+                                   FontSize="18"
+                                   TextWrapping="Wrap"
+                                   Margin="10,10,10,0"
+                                   TextAlignment="Left"/>
+                    </StackPanel>
+                    <Button x:Name="RecommendPanelOkay"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Bottom"
+                            Click="RecommendPanelOkay_Click"
+                            Margin="0,0,0,10"
+                            FontSize="18"
+                            Content="Got it, Thanks!"/>
+                </Grid>
+            </Border>
+        </Border>
     </Grid>
 </Page>

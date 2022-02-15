@@ -38,6 +38,7 @@ namespace Fluff.Pages
         #region Global Page Vars
         ObservableCollection<Post> PostsViewModel;
         ObservableCollection<Pool> PoolsSource;
+        ObservableCollection<Comment> CommentSource;
         CurrentPostNotif PostHandler;
         RequestHost host;
         PostNavigationArgs args;
@@ -57,6 +58,7 @@ namespace Fluff.Pages
             PostsViewModel = new ObservableCollection<Post>();
             PostHandler = new CurrentPostNotif();
             PoolsSource = new ObservableCollection<Pool>();
+            CommentSource = new ObservableCollection<Comment>();
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -158,7 +160,10 @@ namespace Fluff.Pages
                 PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].voted_up = false;
             }
             PostHandler.CurrentPost.score.up = x.up;
+            PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].score.up = x.up;
+            PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].score.down = x.down;
             PostHandler.CurrentPost.score.down = x.down;
+            Bindings.Update();
         }
         private async void DislikeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -196,7 +201,10 @@ namespace Fluff.Pages
                 PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].voted_down = false;
             }
             PostHandler.CurrentPost.score.up = x.up;
+            PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].score.up = x.up;
+            PostsViewModel[PostsViewModel.IndexOf(PostHandler.CurrentPost)].score.down = x.down;
             PostHandler.CurrentPost.score.down = x.down;
+            Bindings.Update();
         }
         #endregion ToolBar Functions
 
@@ -559,6 +567,85 @@ namespace Fluff.Pages
             PagesStack.ArgsStack.Add(NewArgs);
 
             this.Frame.Navigate(typeof(PoolViewPage), PagesStack.ArgsStack.Count()-1, new DrillInNavigationTransitionInfo());
+        }
+
+        private void CommentsButton_Click(object sender, RoutedEventArgs e)
+        {
+            CommentSource.Clear();
+            CommentsProgress.Visibility = Visibility.Visible;
+            ShowCommentsPane.Begin();
+
+            Thread t = new Thread(LoadComments);
+            t.Start();
+        }
+
+        private async void LoadComments()
+        {
+            var comments = await host.GetPostComments(PostHandler.CurrentPost.id);
+
+            foreach(var comment in comments)
+            {
+                comment.body = DTextConverter.ToMarkdown(comment.body);
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    CommentSource.Add(comment);
+                });
+            }
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                CommentsProgress.Visibility = Visibility.Collapsed;
+            });
+        }
+
+        private void CloseCommentsButton_Click(object sender, RoutedEventArgs e)
+        {
+            HideCommentsPane.Begin();
+        }
+
+        private void PostCommentButton_Click(object sender, RoutedEventArgs e)
+        {
+            Thread t = new Thread(PostComment);
+            t.Start(CommentTextBox.Text);
+        }
+
+        private async void PostComment(object s)
+        {
+            string body = s as string;
+
+            var check = await host.CommentOnPost(PostHandler.CurrentPost.id, body);
+
+            if (!check)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                    var page = (MainPage)grid.Parent;
+                    page.ShowSystemMessage("Failed to comment, are you logged in?");
+                });
+                return;
+            }
+
+            var comments = await host.GetPostComments(PostHandler.CurrentPost.id, 1);
+
+            comments[0].body = DTextConverter.ToMarkdown(comments[0].body);
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                CommentSource.Insert(0, comments[0]);
+                CommentTextBox.Text = "";
+                CommentsProgress.Visibility = Visibility.Collapsed;
+            });
+        }
+
+        private void MoreButton_Click(object sender, RoutedEventArgs e)
+        {
+            if(PostToolBar.ActualWidth == 45)
+            {
+                ShowToolBar.Begin();
+            }
+            else
+            {
+                HideToolBar.Begin();
+            }
         }
     }
 }
