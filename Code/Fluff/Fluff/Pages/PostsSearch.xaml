@@ -75,18 +75,31 @@
                                HorizontalAlignment="Center"
                                FontSize="24"
                                Margin="10,10,10,0"/>
-                    <TextBox VerticalAlignment="Top"
-                             x:Name="SearchBox"
-                             KeyDown="SearchBox_KeyDown"
-                             TextWrapping="NoWrap"
-                             TextChanged="SearchBox_TextChanged"
-                             Margin="10,10,10,10"/>
+                    <AutoSuggestBox TextChanged="SearchBox_TextChanged"
+                                    SuggestionChosen="SearchBox_SuggestionChosen"
+                                    x:Name="SearchBox"
+                                    KeyDown="SearchBox_KeyDown"
+                                    ItemsSource="{x:Bind TagsViewModel}"
+                                    Margin="10,5,10,10"
+                                    AutomationProperties.Name="Basic AutoSuggestBox">
+                        <AutoSuggestBox.ItemTemplate>
+                            <DataTemplate x:DataType="eapi:Tag">
+                                <Grid>
+                                    <TextBlock Text="{x:Bind name}"
+                                               TextTrimming="CharacterEllipsis"
+                                               HorizontalAlignment="Left"
+                                               Margin="0,0,50,0"/>
+                                    <TextBlock Text="{x:Bind post_count}"
+                                               HorizontalAlignment="Right"/>
+                                </Grid>
+                            </DataTemplate>
+                        </AutoSuggestBox.ItemTemplate>
+                    </AutoSuggestBox>
 
                     <!-- List that shows autocomplete suggestions when typing -->
                     <ListView x:Name="SearchTagAutoComplete" 
                               Visibility="Visible" 
-                              IsItemClickEnabled="True" 
-                              ItemClick="SearchTagAutoComplete_ItemClick"/>
+                              IsItemClickEnabled="True" />
                     
                     <!-- Search Button -->
                     <Grid Margin="10,0,10,15">

@@ -30,6 +30,7 @@ namespace Fluff.Pages
         #region Global Page Vars
         // The collection of posts bound to the gridview
         ObservableCollection<Post> PostsViewModel;
+        ObservableCollection<Tag> TagsViewModel;
         // The Api host
         RequestHost host;
         // If searching is allowed, used to keep the filters from starting more searches on page load.
@@ -53,6 +54,7 @@ namespace Fluff.Pages
             this.InitializeComponent();
             host = new RequestHost("Fluff/0.5 (by EpsilonRho)"); // Initialize the api host
             PostsViewModel = new ObservableCollection<Post>(); // Initialize the post holder
+            TagsViewModel = new ObservableCollection<Tag>(); // Initialize the post holder
             CanGetTags = true; // set this to start as true
             CanSearch = true;
             //StartSearch();
@@ -71,7 +73,7 @@ namespace Fluff.Pages
                 PostsViewModel = new ObservableCollection<Post>(args.PostsList);
             }
         }
-        
+
 
         #endregion Page Loading Functions
 
@@ -90,7 +92,7 @@ namespace Fluff.Pages
             PagesStack.ArgsStack.Add(NewArgs);
 
             // Start navigation
-            this.Frame.Navigate(typeof(SinglePostView), PagesStack.ArgsStack.Count()-1, new DrillInNavigationTransitionInfo());
+            this.Frame.Navigate(typeof(SinglePostView), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
         }
         private void GridViewItem_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
@@ -154,7 +156,7 @@ namespace Fluff.Pages
             int count = (int)SettingsHandler.PostCount;
 
             // Login if creds are available 
-            if(SettingsHandler.Username != "" && SettingsHandler.ApiKey != "")
+            if (SettingsHandler.Username != "" && SettingsHandler.ApiKey != "")
             {
                 host.Username = SettingsHandler.Username;
                 host.ApiKey = SettingsHandler.ApiKey;
@@ -162,14 +164,14 @@ namespace Fluff.Pages
 
             // Get Posts
             var posts = await host.GetPosts(tags, count, args.Page);
-            if(posts == null)
+            if (posts == null)
             {
                 return;
             }
 
             // If there are no posts, try to load the last list of posts.
             // This is for when your navigating to the last page of a search, so it doesn't load an empty page.
-            if(posts.Count == 0)
+            if (posts.Count == 0)
             {
                 if (args.Page > 1)
                 {
@@ -183,7 +185,7 @@ namespace Fluff.Pages
             }
 
             // Add posts to gridview
-            foreach(var post in posts)
+            foreach (var post in posts)
             {
                 if (post.preview.url == null)
                 {
@@ -192,9 +194,9 @@ namespace Fluff.Pages
                 }
 
                 bool vote = false;
-                if(SettingsHandler.VotedPosts.TryGetValue(post.id, out vote))
+                if (SettingsHandler.VotedPosts.TryGetValue(post.id, out vote))
                 {
-                    if(vote)
+                    if (vote)
                     {
                         post.voted_up = true;
                     }
@@ -224,31 +226,29 @@ namespace Fluff.Pages
         }
         private void TimerThread()
         {
-            timeTillSearch = 0.3;
             while (timeTillSearch > 0)
             {
                 timeTillSearch -= 0.1;
                 Thread.Sleep(100);
             }
 
-            if(TagToSearch.Length > 3)
+            if (TagToSearch.Length > 3)
             {
                 Thread TagsThread = new Thread(GetAutocompleteTags);
                 TagsThread.Start(TagToSearch);
-
             }
             TagsThread = null;
 
         }
         private async void GetAutocompleteTags(object tag)
         {
+            var res = await host.GetAutocompletetags(tag as string);
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                SearchTagAutoComplete.Items.Clear();
+                TagsViewModel.Clear();
             });
-            var res = await host.GetAutocompletetags(tag as string);
 
-            if(res == null)
+            if (res == null)
             {
                 return;
             }
@@ -257,8 +257,30 @@ namespace Fluff.Pages
             {
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    SearchTagAutoComplete.Items.Add(t.name);
+                    TagsViewModel.Add(t);
                 });
+            }
+            
+        }
+        private void SearchBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        {
+            string[] split = sender.Text.Split(' ');
+            SearchBox.Text = SearchBox.Text.Replace(split[split.Length - 1], "");
+            SearchBox.Text += ((Tag)args.SelectedItem).name;
+        }
+
+        private void SearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+            {
+                timeTillSearch = 0.3;
+                if(TagsThread == null)
+                {
+                    TagsThread = new Thread(TimerThread);
+                    TagsThread.Start();
+                }
+                string[] split = sender.Text.Split(' ');
+                TagToSearch = split[split.Length - 1];
             }
         }
         #endregion
@@ -271,75 +293,6 @@ namespace Fluff.Pages
                 SearchTagAutoComplete.Items.Clear();
                 args.Page = 1;
                 StartSearch();
-            }
-        }
-        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            timeTillSearch = 0.3;
-            string[] tags = SearchBox.Text.Split(" ");
-            int index = 0;
-            int count = 0;
-            int pos = SearchBox.SelectionStart;
-            for (int i = 0; i < tags.Count(); i++)
-            {
-                count += tags[i].Count();
-                if (pos == count)
-                {
-                    index = i;
-                    break;
-                }
-                count++;
-            }
-            if (tags[index].Count() >= 3)
-            {
-                if (TagsThread == null && CanGetTags)
-                {
-                    TagsThread = new Thread(TimerThread);
-                    TagsThread.Start();
-                }
-                TagToSearch = tags[index];
-            }
-            else
-            {
-                SearchTagAutoComplete.Items.Clear();
-            }
-        }
-        private void SearchTagAutoComplete_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            try
-            {
-                CanGetTags = false;
-                string clickedTag = (string)e.ClickedItem;
-                string[] tags = SearchBox.Text.Split(" ");
-                int pos = SearchBox.SelectionStart;
-                SearchBox.Text = "";
-                int count = 0;
-                for (int i = 0; i < tags.Count(); i++)
-                {
-                    count += tags[i].Count();
-                    if (pos == count)
-                    {
-                        pos = (pos - tags[i].Count()) + clickedTag.Count() + 1;
-                        if (tags[i][0] == '-')
-                        {
-                            tags[i] = "-" + clickedTag;
-                        }
-                        else
-                        {
-                            tags[i] = clickedTag;
-                        }
-                        SearchBox.Focus(FocusState.Programmatic);
-                    }
-                    SearchBox.Text += tags[i] + " ";
-                    count++;
-                }
-                SearchTagAutoComplete.Items.Clear();
-                SearchBox.SelectionStart = pos;
-                CanGetTags = true;
-            }
-            catch (Exception)
-            {
-
             }
         }
         private void SearchButton_Tapped(object sender, TappedRoutedEventArgs e)
@@ -376,14 +329,14 @@ namespace Fluff.Pages
                 PostsView.IsItemClickEnabled = true;
                 PostsView.SelectionMode = ListViewSelectionMode.None;
 
-                foreach(var item in list)
+                foreach (var item in list)
                 {
                     var grid = ((Grid)this.Frame.Parent).Parent as Grid;
                     var page = (MainPage)grid.Parent;
-                    page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = item as Post });
+                    page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = item as Post, FileName = (item as Post).file.md5, FolderName = "" });
                 }
             }
-            
+
         }
         private void LeftNav_Click(object sender, RoutedEventArgs e)
         {
@@ -476,7 +429,7 @@ namespace Fluff.Pages
 
         private void RecommendButton_Click(object sender, RoutedEventArgs e)
         {
-            if(SettingsHandler.Username == "")
+            if (SettingsHandler.Username == "")
             {
                 var grid = ((Grid)this.Frame.Parent).Parent as Grid;
                 var page = (MainPage)grid.Parent;
@@ -520,7 +473,7 @@ namespace Fluff.Pages
             Dictionary<string, int> Counts = new Dictionary<string, int>();
             foreach (var post in posts)
             {
-                foreach(var tag in post.tags.general)
+                foreach (var tag in post.tags.general)
                 {
                     var check = Counts.TryAdd(tag, 1);
                     if (!check)
@@ -553,7 +506,7 @@ namespace Fluff.Pages
                     }
                 }
             }
-            
+
             var sortedDict = from entry in Counts orderby entry.Value descending select entry;
 
             var sortedList = sortedDict.ToList();
@@ -564,11 +517,11 @@ namespace Fluff.Pages
 
             for (int i = 0; i < 10; i++)
             {
-                tags += $"~{sortedList[rand.Next(sortedList.Count/3)].Key} ";
+                tags += $"~{sortedList[rand.Next(sortedList.Count / 3)].Key} ";
             }
 
             tags += " order:random";
-            
+
             // Get max Rating
             if (SettingsHandler.Rating == "safe")
             {

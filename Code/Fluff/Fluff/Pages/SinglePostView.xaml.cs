@@ -119,10 +119,12 @@ namespace Fluff.Pages
         private void MouseHoverHandler_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
             ShowControls.Begin();
+            ShowToolBar.Begin();
         }
         private void MouseHoverHandler_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             HideControls.Begin();
+            HideToolBar.Begin();
         }
         private async void LikeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -583,6 +585,11 @@ namespace Fluff.Pages
         {
             var comments = await host.GetPostComments(PostHandler.CurrentPost.id);
 
+            if(comments == null)
+            {
+                return;
+            }
+
             foreach(var comment in comments)
             {
                 comment.body = DTextConverter.ToMarkdown(comment.body);
@@ -638,14 +645,18 @@ namespace Fluff.Pages
 
         private void MoreButton_Click(object sender, RoutedEventArgs e)
         {
-            if(PostToolBar.ActualWidth == 45)
-            {
-                ShowToolBar.Begin();
-            }
-            else
-            {
-                HideToolBar.Begin();
-            }
+            ShowToolBar.Begin();
+        }
+
+        private void DescButton_Click(object sender, RoutedEventArgs e)
+        {
+            DescText.Text = DTextConverter.ToMarkdown(PostHandler.CurrentPost.description);
+            ShowDesc.Begin();
+        }
+
+        private void CloseDescButton_Click(object sender, RoutedEventArgs e)
+        {
+            HideDesc.Begin();
         }
     }
 }

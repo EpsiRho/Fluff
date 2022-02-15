@@ -24,5 +24,9 @@
 * Fixed various bugs
 * Added Comments to posts
 * You can now comment on posts
-* Some dtext is converted to markdown for proper display
+* Some DText is converted to markdown for proper display
 * Moved post controls into overflow menu
+* Updated tag suggestions
+* Fixed multiple downloads
+* Added Descriptions
+* 

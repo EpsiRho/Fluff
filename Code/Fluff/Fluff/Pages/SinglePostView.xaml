@@ -86,17 +86,35 @@
         </Storyboard>
         <Storyboard x:Name="ShowToolBar">
             <DoubleAnimation Duration="0:0:0.1"
-                             To="282"
-                             EnableDependentAnimation="True"
-                             Storyboard.TargetProperty="Width"
-                             Storyboard.TargetName="PostToolBar"/>
+                             To="1"
+                             Storyboard.TargetProperty="ScaleX"
+                             Storyboard.TargetName="BorderScale"/>
+            <DoubleAnimation Duration="0:0:0.1"
+                             To="0"
+                             Storyboard.TargetProperty="Opacity"
+                             Storyboard.TargetName="MoreButton"/>
         </Storyboard>
         <Storyboard x:Name="HideToolBar">
             <DoubleAnimation Duration="0:0:0.1"
-                             To="45"
-                             EnableDependentAnimation="True"
-                             Storyboard.TargetProperty="Width"
-                             Storyboard.TargetName="PostToolBar"/>
+                             To="0"
+                             Storyboard.TargetProperty="ScaleX"
+                             Storyboard.TargetName="BorderScale"/>
+            <DoubleAnimation Duration="0:0:0.1"
+                             To="1"
+                             Storyboard.TargetProperty="Opacity"
+                             Storyboard.TargetName="MoreButton"/>
+        </Storyboard>
+        <Storyboard x:Name="ShowDesc">
+            <DoubleAnimation Duration="0:0:0.1"
+                             To="0"
+                             Storyboard.TargetProperty="Y"
+                             Storyboard.TargetName="DescTrans"/>
+        </Storyboard>
+        <Storyboard x:Name="HideDesc">
+            <DoubleAnimation Duration="0:0:0.1"
+                             To="-400"
+                             Storyboard.TargetProperty="Y"
+                             Storyboard.TargetName="DescTrans"/>
         </Storyboard>
     </Page.Resources>
     <Grid>
@@ -363,16 +381,36 @@
                 </FlipView.ItemTemplate>
             </FlipView>
         </Border>
-        <Border HorizontalAlignment="Left"
-                Grid.Column="1"
+        <Button x:Name="MoreButton" 
+                Height="40"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                PointerEntered="MouseHoverHandler_PointerEntered"
+                Margin="10"
+                Grid.Column="1"
+                Click="MoreButton_Click"
+                Foreground="White">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                  Glyph="&#xE10C;"
+                                  FontWeight="SemiBold"
+                                  FontSize="18"
+                                  Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
+        <Border PointerEntered="MouseHoverHandler_PointerEntered"
                 PointerExited="MouseHoverHandler_PointerExited"
                 CornerRadius="10"
                 Height="40"
-                x:Name="PostToolBar"
-                Width="45"
-                Margin="10">
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="10"
+                Grid.Column="1"
+                x:Name="PostToolBar">
+            <Border.RenderTransform>
+                <ScaleTransform ScaleX="0" x:Name="BorderScale"/>
+            </Border.RenderTransform>
             <Grid>
                 <Border x:Name="CustomBarBrush"
                         Opacity="0.1">
@@ -386,20 +424,6 @@
                 <StackPanel Orientation="Horizontal"
                             VerticalAlignment="Top"
                             Margin="0,-5,0,0">
-                    <Button x:Name="MoreButton" 
-                            Height="50"
-                            Click="MoreButton_Click"
-                            Foreground="White">
-                        <Button.Content>
-                            <StackPanel Orientation="Horizontal">
-                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
-                                          Glyph="&#xE10C;"
-                                          FontWeight="SemiBold"
-                                          FontSize="18"
-                                          Margin="0,5,0,0"/>
-                            </StackPanel>
-                        </Button.Content>
-                    </Button>
                     <Button x:Name="LibraryButton" 
                             Height="50"
                             Foreground="White">
@@ -476,6 +500,18 @@
                                 <TextBlock Text="{x:Bind PostHandler.CurrentPost.score.down, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                            FontSize="18"
                                            Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                    <Button Click="DescButton_Click"
+                            Foreground="White"
+                            Height="50">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                          Glyph="&#xE12A;" 
+                                          FontSize="18"
+                                          Margin="0,5,0,0"/>
                             </StackPanel>
                         </Button.Content>
                     </Button>
@@ -562,6 +598,37 @@
                             </ListView.ItemTemplate>
                         </ListView>
                     </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <Border HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                Background="{StaticResource CustomeAcrylicBrush}"
+                Margin="8,8,8,0"
+                Height="200"
+                Grid.Column="1"
+                CornerRadius="10,10,10,10">
+            <Border.RenderTransform>
+                <TranslateTransform Y="-400"
+                                    x:Name="DescTrans"/>
+            </Border.RenderTransform>
+            <Grid>
+                <Button VerticalAlignment="Top"
+                        x:Name="CloseDescButton"
+                        Click="CloseDescButton_Click"
+                        Margin="5,5,0,0">
+                    <SymbolIcon Symbol="Cancel"/>
+                </Button>
+                <ScrollViewer HorizontalAlignment="Left"
+                              Margin="10,50,10,10"
+                              VerticalAlignment="Top">
+                    <controls:MarkdownTextBlock x:Name="DescText"
+                                                Background="Transparent"
+                                                IsTextSelectionEnabled="True"
+                                                HorizontalAlignment="Left"
+                                                FontSize="16"
+                                                TextWrapping="Wrap"/>
                 </ScrollViewer>
             </Grid>
         </Border>

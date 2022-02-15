@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Fluff.Classes
@@ -43,7 +44,7 @@ namespace Fluff.Classes
             dtext = dtext.Replace("[quote]", ">").Replace("[/quote]", "");
 
             // Links
-            dtext = dtext.Replace("\":", "](https://e621.net").Replace("\"", "[").Replace(" said:", ") said:");
+            dtext = dtext.Replace("\":", "](").Replace("\"", "[").Replace(" said:", ") said:");
 
             // Post Thumbnails
 
@@ -60,6 +61,21 @@ namespace Fluff.Classes
             // Lists are the same
 
             // Sections
+            dtext = dtext.Replace("[section]", ">");
+            dtext = dtext.Replace("[/section]", "");
+            Regex rx = new Regex(@"(\[section(.*)=)",
+             RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+            var matches = rx.Matches(dtext);
+
+            foreach (var match in matches)
+            {
+                string BlowMe = match.ToString();
+                dtext = dtext.Replace(BlowMe, ">");
+                var idx = dtext.IndexOf(']');
+                dtext = dtext.Remove(idx, 1);
+            }
+
 
             // Tables will be a problem
 
