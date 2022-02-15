@@ -59,7 +59,7 @@
     </Page.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" MinWidth="200"/>
+            <ColumnDefinition Width="250" MinWidth="250"/>
             <ColumnDefinition Width="70*"/>
         </Grid.ColumnDefinitions>
         <!-- Search and sort side bar -->

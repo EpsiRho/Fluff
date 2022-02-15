@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" xmlns:classes="using:Fluff.Classes"
     mc:Ignorable="d">
     <Page.Resources>
         <!-- Styles the acrylic on the page, used for the like count flyup and the page changer buttons on the bottom left. -->
@@ -61,7 +61,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" MinWidth="200"/>
+            <ColumnDefinition Width="250" MinWidth="250"/>
             <ColumnDefinition Width="70*"/>
         </Grid.ColumnDefinitions>
 
@@ -78,6 +78,7 @@
                     <AutoSuggestBox TextChanged="SearchBox_TextChanged"
                                     SuggestionChosen="SearchBox_SuggestionChosen"
                                     x:Name="SearchBox"
+                                    QuerySubmitted="SearchBox_QuerySubmitted"
                                     KeyDown="SearchBox_KeyDown"
                                     ItemsSource="{x:Bind TagsViewModel}"
                                     Margin="10,5,10,10"
@@ -156,6 +157,92 @@
                             Margin="0,10,0,0"
                             Click="RecommendButton_Click"
                             HorizontalAlignment="Center"/>
+
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="Favorited Tags" 
+                               FontSize="18"
+                               Margin="45,10,0,0"
+                               HorizontalAlignment="Center"/>
+                        <AppBarButton Height="45"
+                                      Width="40"
+                                      x:Name="AddNewFavButton"
+                                      Margin="5,0,0,0">
+                            <AppBarButton.Icon>
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                          Glyph="&#xE109;" />
+                            </AppBarButton.Icon>
+                            <AppBarButton.Flyout>
+                                <Flyout Placement="Bottom">
+                                    <StackPanel Orientation="Horizontal"
+                                                Margin="-15,-14,-15,-15">
+                                        <AutoSuggestBox TextChanged="SearchBox_TextChanged"
+                                                        SuggestionChosen="SearchBox_SuggestionChosen"
+                                                        x:Name="AddTagFavBox"
+                                                        Width="150"
+                                                        AllowFocusOnInteraction="True"
+                                                        QuerySubmitted="AddTagFavBox_QuerySubmitted"
+                                                        ItemsSource="{x:Bind TagsViewModel}"
+                                                        Margin="10,10,10,10"
+                                                        AutomationProperties.Name="Basic AutoSuggestBox">
+                                            <AutoSuggestBox.ItemTemplate>
+                                                <DataTemplate x:DataType="eapi:Tag">
+                                                    <Grid>
+                                                        <TextBlock Text="{x:Bind name}"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   HorizontalAlignment="Left"
+                                                                   Margin="0,0,50,0"/>
+                                                        <TextBlock Text="{x:Bind post_count}"
+                                                                   HorizontalAlignment="Right"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </AutoSuggestBox.ItemTemplate>
+                                        </AutoSuggestBox>
+                                        <Button x:Name="AddTagFavButton" 
+                                                Margin="0,0,10,0"
+                                                Click="AddTagFavButton_Click">
+                                            <SymbolIcon Symbol="Add"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Flyout>
+                            </AppBarButton.Flyout>
+                        </AppBarButton>
+                    </StackPanel>
+                    <GridView x:Name="TagsGridView"
+                              Margin="5,-10,5,5"
+                              HorizontalAlignment="Center"
+                              ItemClick="TagsGridView_ItemClick"
+                              SelectionMode="None"
+                              IsItemClickEnabled="True"
+                              animations:ItemsReorderAnimation.Duration="00:00:00.4"
+                              ItemsSource="{x:Bind classes:SettingsHandler.FavoriteTags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <GridView.ItemTemplate>
+                            <DataTemplate x:DataType="eapi:Post">
+                                <Border>
+                                    <Border.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem Text="Remove"
+                                                            Click="FavTagMenuFlyoutItem_Click"
+                                                            Tag="{Binding}"/>
+                                        </MenuFlyout>
+                                    </Border.ContextFlyout>
+                                    <Grid>
+                                        <TextBlock Text="{Binding}"
+                                                   FontSize="16"
+                                                   Margin="5,0,5,0"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                        <GridView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <controls:WrapPanel Orientation="Horizontal"
+                                                    VerticalSpacing="-5"
+                                                    HorizontalSpacing="-5"/>
+                            </ItemsPanelTemplate>
+                        </GridView.ItemsPanel>
+                    </GridView>
+
                 </StackPanel>
                 
                 <!-- Page Navigation Buttons-->

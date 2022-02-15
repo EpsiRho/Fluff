@@ -265,8 +265,8 @@ namespace Fluff.Pages
         private void SearchBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
         {
             string[] split = sender.Text.Split(' ');
-            SearchBox.Text = SearchBox.Text.Replace(split[split.Length - 1], "");
-            SearchBox.Text += ((Tag)args.SelectedItem).name;
+            sender.Text = sender.Text.Replace(split[split.Length - 1], "");
+            sender.Text += ((Tag)args.SelectedItem).name;
         }
 
         private void SearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
@@ -517,7 +517,7 @@ namespace Fluff.Pages
 
             for (int i = 0; i < 10; i++)
             {
-                tags += $"~{sortedList[rand.Next(sortedList.Count / 3)].Key} ";
+                tags += $"~{sortedList[rand.Next(sortedList.Count / 4)].Key} ";
             }
 
             tags += " order:random";
@@ -542,6 +542,62 @@ namespace Fluff.Pages
         private void RecommendPanelOkay_Click(object sender, RoutedEventArgs e)
         {
             RecommendedPanel.Visibility = Visibility.Collapsed;
+        }
+
+        private void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            SearchTagAutoComplete.Items.Clear();
+            this.args.Page = 1;
+            StartSearch();
+        }
+
+        private void TagsGridView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            string str = e.ClickedItem as string;
+            if (SearchBox.Text.Contains(str))
+            {
+                SearchBox.Text = SearchBox.Text.Replace($" {str}","");
+                SearchBox.Text = SearchBox.Text.Replace(str,"");
+                return;
+            }
+
+            if(SearchBox.Text.Count() == 0)
+            {
+                SearchBox.Text += $"{str}";
+            }
+            else
+            {
+                SearchBox.Text += $" {str}";
+            }
+        }
+
+        private void AddTagFavBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            SettingsHandler.FavoriteTags.Add(sender.Text);
+            SettingsHandler.SaveFavsToFile();
+            Bindings.Update();
+            sender.Text = "";
+            AddNewFavButton.Flyout.Hide();
+        }
+
+        private void AddTagFavButton_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsHandler.FavoriteTags.Add(AddTagFavBox.Text);
+            SettingsHandler.SaveFavsToFile();
+            Bindings.Update();
+            AddTagFavBox.Text = "";
+            AddNewFavButton.Flyout.Hide();
+        }
+
+        private void FavTagMenuFlyoutItem_Click(object sender, RoutedEventArgs e)
+        {
+            if(e.OriginalSource != null)
+            {
+                string tag = ((MenuFlyoutItem)e.OriginalSource).Tag.ToString();
+                SettingsHandler.FavoriteTags.Remove(tag);
+                SettingsHandler.SaveFavsToFile();
+                Bindings.Update();
+            }
         }
     }
 }

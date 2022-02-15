@@ -1,8 +1,13 @@
-﻿using System;
+﻿using e6API;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace Fluff.Classes
 {
@@ -17,8 +22,28 @@ namespace Fluff.Classes
         public static string Rating { get; set; }
         public static bool ShowComments { get; set; }
         public static bool MuteVolume { get; set; }
+        public static bool EnableUpload { get; set; }
         public static double PostCount { get; set; }
         public static Dictionary<int, bool> VotedPosts { get; set; }
+        public static ObservableCollection<string> FavoriteTags { get; set; }
+        public static async void SaveFavsToFile()
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                var binaryFormatter = new BinaryFormatter();
 
+                var list = FavoriteTags.ToList();
+
+                binaryFormatter.Serialize(memoryStream, list);
+
+                StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+                StorageFile file = await storageFolder.CreateFileAsync("FavoriteTags.bin", CreationCollisionOption.ReplaceExisting);
+                var stream = await file.OpenStreamForWriteAsync();
+                stream.Write(memoryStream.ToArray(), 0, (int)memoryStream.Length);
+                stream.Flush();
+                stream.Close();
+            }
+
+        }
     }
 }

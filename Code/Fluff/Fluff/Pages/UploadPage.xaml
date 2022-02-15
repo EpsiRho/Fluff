@@ -1,0 +1,43 @@
+﻿<Page
+    x:Class="Fluff.Pages.UploadPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Fluff.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <Pivot Margin="10">
+            <PivotItem Header="File">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Thanks for uploading to e621!"
+                               FontSize="18"
+                               HorizontalAlignment="Center"/>
+                        <TextBlock Text="(and for using Fluff to do it)"
+                               FontSize="14"
+                               HorizontalAlignment="Center"/>
+                        <TextBlock Text="First, Lets choose a file to upload!"
+                               FontSize="18"
+                               Margin="0,10,0,10"
+                               HorizontalAlignment="Center"/>
+                    </StackPanel>
+                    <Button HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        MaxWidth="400"
+                        MaxHeight="500">
+                        <Border Margin="10,20,10,20">
+                            <Grid>
+                                <Image Source="https://i.imgur.com/h5bF7JU.png"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch"/>
+                                <SymbolIcon Symbol="Add"/>
+                            </Grid>
+                        </Border>
+                    </Button>
+                </Grid>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</Page>

@@ -416,7 +416,8 @@ namespace Fluff.Pages
         }
         private void FavoriteTag(object sender, RoutedEventArgs e)
         {
-            // TODO: Make this function
+            SettingsHandler.FavoriteTags.Add(ClickedTag);
+            SettingsHandler.SaveFavsToFile();
         }
         private void ViewWikiEntry(object sender, RoutedEventArgs e)
         {

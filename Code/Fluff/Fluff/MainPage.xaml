@@ -393,7 +393,15 @@
                             <muxc:Expander.Header>
                                 <TextBlock Text="Experimental Settings" FontSize="18"/>
                             </muxc:Expander.Header>
-
+                            <StackPanel>
+                                <TextBlock Text="Careful! These settings enable features that are buggy or incomplete"
+                                           FontSize="16"
+                                           Width="300"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"/>
+                                <TextBlock Text="Enable Upload Tab" Margin="10,20,10,0" FontSize="16" HorizontalAlignment="Center"/>
+                                <ToggleSwitch x:Name="UploadSwitch" Margin="10,0,0,0" HorizontalAlignment="Center"/>
+                            </StackPanel>
                         </muxc:Expander>
                         <muxc:Expander HorizontalAlignment="Stretch">
                             <muxc:Expander.Header>

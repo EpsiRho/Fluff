@@ -69,11 +69,14 @@ namespace Fluff
             //CheckForUpdate();
 
             SettingsHandler.VotedPosts = new Dictionary<int, bool>();
+            SettingsHandler.FavoriteTags = new ObservableCollection<string>();
             if (SettingsHandler.Username != "")
             {
                 Thread t = new Thread(GetLikedPosts);
                 t.Start();
             }
+            Thread d = new Thread(LoadFavsFromFile);
+            d.Start();
         }
 
         #region Settings Functions
@@ -125,6 +128,17 @@ namespace Fluff
                 SettingsHandler.PostCount = 75;
                 localSettings.Values["postcount"] = 75;
             }
+            try
+            {
+                SettingsHandler.EnableUpload = (bool)localSettings.Values["upload"];
+                UploadButton.IsEnabled = SettingsHandler.EnableUpload;
+            }
+            catch (Exception)
+            {
+                SettingsHandler.EnableUpload = false;
+                localSettings.Values["upload"] = false;
+                UploadButton.IsEnabled = false;
+            }
         }
         private void SetSettings()
         {
@@ -137,6 +151,9 @@ namespace Fluff
             SettingsHandler.ShowComments = CommentSwitch.IsOn;
             localSettings.Values["volume"] = VolumeSwitch.IsOn;
             SettingsHandler.MuteVolume = VolumeSwitch.IsOn;
+            localSettings.Values["upload"] = UploadSwitch.IsOn;
+            SettingsHandler.EnableUpload = UploadSwitch.IsOn;
+            UploadButton.IsEnabled = UploadSwitch.IsOn;
         }
         private async void SetSettingsUI()
         {
@@ -393,6 +410,14 @@ namespace Fluff
             ClosePoolsFull.Begin();
             CloseWikiFull.Begin();
             OpenUploadFull.Begin();
+            PagesStack.ArgsStack.Add(new PostNavigationArgs()
+            {
+                ClickedPost = null,
+                Page = 1,
+                PostsList = null,
+                Tags = ""
+            });
+            contentFrame.Navigate(typeof(UploadPage), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
         }
         private void UploadButton_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
@@ -691,6 +716,32 @@ namespace Fluff
             }
         }
         #endregion Image Saving
+
+        
+        private async void LoadFavsFromFile()
+        {
+            try
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+                    StorageFile file = await storageFolder.GetFileAsync("FavoriteTags.bin");
+                    var stream = await file.OpenStreamForReadAsync();
+
+                    var binaryFormatter = new BinaryFormatter();
+
+                    stream.CopyTo(memoryStream);
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+
+                    var list = (List<string>)binaryFormatter.Deserialize(memoryStream);
+                    SettingsHandler.FavoriteTags = new ObservableCollection<string>(list);
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+        }
 
         private async void GetLikedPosts()
         {
