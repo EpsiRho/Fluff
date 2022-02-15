@@ -4,40 +4,66 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Fluff.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
 
     <Grid>
-        <Pivot Margin="10">
-            <PivotItem Header="File">
-                <Grid>
-                    <StackPanel>
-                        <TextBlock Text="Thanks for uploading to e621!"
-                               FontSize="18"
-                               HorizontalAlignment="Center"/>
-                        <TextBlock Text="(and for using Fluff to do it)"
-                               FontSize="14"
-                               HorizontalAlignment="Center"/>
-                        <TextBlock Text="First, Lets choose a file to upload!"
-                               FontSize="18"
-                               Margin="0,10,0,10"
-                               HorizontalAlignment="Center"/>
-                    </StackPanel>
-                    <Button HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        MaxWidth="400"
-                        MaxHeight="500">
-                        <Border Margin="10,20,10,20">
-                            <Grid>
-                                <Image Source="https://i.imgur.com/h5bF7JU.png"
-                                       HorizontalAlignment="Stretch"
-                                       VerticalAlignment="Stretch"/>
-                                <SymbolIcon Symbol="Add"/>
-                            </Grid>
-                        </Border>
-                    </Button>
-                </Grid>
-            </PivotItem>
-        </Pivot>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250" MinWidth="250"/>
+            <ColumnDefinition Width="80*"/>
+        </Grid.ColumnDefinitions>
+
+        <muxc:NavigationView IsBackButtonVisible="Collapsed"
+                             IsPaneOpen="True"
+                             Grid.ColumnSpan="2"
+                             Background="Transparent"
+                             IsTitleBarAutoPaddingEnabled="False"  
+                             IsSettingsVisible="False"
+                             IsPaneToggleButtonVisible="False">
+            <muxc:NavigationViewItem Icon="Target" Content="Text"/>
+            <muxc:NavigationViewItem Icon="Target" Content="Text"/>
+            <muxc:NavigationViewItem Icon="Target" Content="Text"/>
+            <muxc:NavigationViewItem Icon="Target" Content="Text"/>
+        </muxc:NavigationView>
+        
+        <Border Grid.Column="1"
+                Background="{ThemeResource SystemChromeLowColor}"
+                CornerRadius="10,0,0,0">
+            <Pivot Margin="10">
+                <PivotItem>
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Thanks for uploading to e621~"
+                                       FontSize="18"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="(and for using Fluff to do it)"
+                                       FontSize="14"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="First, Lets choose a file to upload!"
+                                       FontSize="18"
+                                       Margin="0,10,0,10"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <GridViewItem HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      MaxWidth="400"
+                                      Padding="10"
+                                      MaxHeight="500">
+                            <Border Margin="0"
+                                    CornerRadius="10"
+                                    MinWidth="100"
+                                    Background="{ThemeResource SystemAltLowColor}"
+                                    MinHeight="100">
+                                <Grid>
+                                    <SymbolIcon Symbol="Add"/>
+                                    <Image/>
+                                </Grid>
+                            </Border>
+                        </GridViewItem>
+                    </Grid>
+                </PivotItem>
+            </Pivot>
+        </Border>
     </Grid>
 </Page>
