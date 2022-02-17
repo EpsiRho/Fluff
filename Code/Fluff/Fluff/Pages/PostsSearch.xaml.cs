@@ -17,6 +17,7 @@ using e6API;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml.Media.Animation;
 using Fluff.Classes;
+using System.Reflection;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -467,8 +468,19 @@ namespace Fluff.Pages
                 PageText.Text = "R";
                 PostsViewModel.Clear();
             });
+            var assembly = this.GetType().GetTypeInfo().Assembly;
+            var resource = assembly.GetManifestResourceStream("Fluff.Assets.BannedTags.txt");
 
-            var posts = await host.GetPosts($"votedup:{SettingsHandler.Username}", 300);
+            byte[] buffer = new byte[resource.Length];
+            resource.Read(buffer, 0, (int)resource.Length);
+
+            string response = System.Text.Encoding.Default.GetString(buffer);
+
+            List<string> bannedtags = response.Split("\n").ToList();
+
+            host.Username = SettingsHandler.Username;
+            host.ApiKey = SettingsHandler.ApiKey;
+            var posts = await host.GetPosts($"votedup:EpsilonRho", 300);
 
             Dictionary<string, int> Counts = new Dictionary<string, int>();
             foreach (var post in posts)
@@ -487,6 +499,10 @@ namespace Fluff.Pages
                     if (!check)
                     {
                         Counts[tag]++;
+                    }
+                    if (tag == "sepf")
+                    {
+
                     }
                 }
                 foreach (var tag in post.tags.copyright)
@@ -507,26 +523,29 @@ namespace Fluff.Pages
                 }
             }
 
+
             var sortedDict = from entry in Counts orderby entry.Value descending select entry;
 
             var sortedList = sortedDict.ToList();
 
+            var FinalList = new List<KeyValuePair<string, int>>();
+            foreach (var item in sortedList)
+            {
+                if (!bannedtags.Contains(item.Key))
+                {
+                    FinalList.Add(item);
+                }
+            }
+
             string tags = "";
-
             Random rand = new Random();
-
             for (int i = 0; i < 10; i++)
             {
-                tags += $"~{sortedList[rand.Next(sortedList.Count / 4)].Key} ";
+                int idx = rand.Next(FinalList.Count / 4);
+                tags += $"~{FinalList[idx].Key} ";
             }
 
-            tags += " order:random";
-
-            // Get max Rating
-            if (SettingsHandler.Rating == "safe")
-            {
-                tags += $" rating:safe";
-            }
+            tags += "order:random";
 
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {

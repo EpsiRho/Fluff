@@ -37,6 +37,8 @@ namespace Fluff.Pages
 
         #region Global Page Vars
         ObservableCollection<Post> PostsViewModel;
+        ObservableCollection<Post> ParentViewModel;
+        ObservableCollection<Post> ChildrenViewModel;
         ObservableCollection<Pool> PoolsSource;
         ObservableCollection<Comment> CommentSource;
         CurrentPostNotif PostHandler;
@@ -50,7 +52,7 @@ namespace Fluff.Pages
         {
             this.InitializeComponent();
             host = new RequestHost(SettingsHandler.UserAgent); // Initialize the api host
-            if(SettingsHandler.Username != "")
+            if (SettingsHandler.Username != "")
             {
                 host.Username = SettingsHandler.Username;
                 host.ApiKey = SettingsHandler.ApiKey;
@@ -59,6 +61,8 @@ namespace Fluff.Pages
             PostHandler = new CurrentPostNotif();
             PoolsSource = new ObservableCollection<Pool>();
             CommentSource = new ObservableCollection<Comment>();
+            ParentViewModel = new ObservableCollection<Post>();
+            ChildrenViewModel = new ObservableCollection<Post>();
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -66,9 +70,23 @@ namespace Fluff.Pages
             PostsViewModel = new ObservableCollection<Post>(args.PostsList);
             PostFlipView.SelectedIndex = PostsViewModel.IndexOf(args.ClickedPost);
             PostHandler.CurrentPost = args.ClickedPost;
+            PostHandler.ShowHighQuality = Visibility.Collapsed;
 
             Thread t = new Thread(SetVoteColors);
             t.Start();
+        }
+
+        private void SinglePage_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (PostHandler.CurrentPost.file.ext == "webm")
+            {
+                ShowToolBarVideo.Begin();
+            }
+            else
+            {
+                ShowToolBar.Begin();
+            }
+            ThumbnailGridView.ScrollIntoView(ThumbnailGridView.Items[PostFlipView.SelectedIndex]);
         }
 
         private async void SetVoteColors()
@@ -116,20 +134,10 @@ namespace Fluff.Pages
         #endregion Page Loading Functions
 
         #region ToolBar Interactions
-        private void MouseHoverHandler_PointerEntered(object sender, PointerRoutedEventArgs e)
-        {
-            ShowControls.Begin();
-            ShowToolBar.Begin();
-        }
-        private void MouseHoverHandler_PointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            HideControls.Begin();
-            HideToolBar.Begin();
-        }
         private async void LikeButton_Click(object sender, RoutedEventArgs e)
         {
             var x = await host.VotePost(PostHandler.CurrentPost.id, 1);
-            if(x == null)
+            if (x == null)
             {
                 var grid = ((Grid)this.Frame.Parent).Parent as Grid;
                 var page = (MainPage)grid.Parent;
@@ -219,12 +227,40 @@ namespace Fluff.Pages
 
             Thread g = new Thread(GetPools);
             g.Start();
-
-            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation");
-            if (animation != null)
-            {
-                animation.TryStart(PostFlipView);
+            if (ToolBarTrans.Y == 0) 
+            { 
+                if (PostHandler.CurrentPost.file.ext == "webm")
+                {
+                    ShowToolBarVideo.Begin();
+                }
+                else
+                {
+                    ShowToolBar.Begin();
+                }
             }
+
+            if (DescTrans.X == 0)
+            {
+                DescText.Text = DTextConverter.ToMarkdown(PostHandler.CurrentPost.description);
+                CommentSource.Clear();
+                CommentsProgress.Visibility = Visibility.Visible;
+
+                Thread b = new Thread(LoadComments);
+                b.Start();
+
+                ParentViewModel.Clear();
+                ChildrenViewModel.Clear();
+                Thread d = new Thread(LoadRelationships);
+                d.Start();
+
+                SourcesTextBox.Text = "";
+                foreach (var item in PostHandler.CurrentPost.sources)
+                {
+                    SourcesTextBox.Text += $"{item}\n\n\n";
+                }
+            }
+
+            ThumbnailGridView.ScrollIntoView(ThumbnailGridView.Items[PostFlipView.SelectedIndex]);
         }
         private async void GetPools()
         {
@@ -232,7 +268,7 @@ namespace Fluff.Pages
             {
                 PoolsSource.Clear();
             });
-            foreach (var pool in PostHandler.CurrentPost.pools) 
+            foreach (var pool in PostHandler.CurrentPost.pools)
             {
                 var info = await host.GetPoolInfo(pool);
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
@@ -372,7 +408,7 @@ namespace Fluff.Pages
             NewArgs.Tags = args.Tags;
             if (NewArgs.Tags.Contains($"-{ClickedTag}"))
             {
-                NewArgs.Tags = NewArgs.Tags.Replace($"-{ClickedTag}","");
+                NewArgs.Tags = NewArgs.Tags.Replace($"-{ClickedTag}", "");
             }
 
             if (NewArgs.Tags.Contains(ClickedTag))
@@ -435,7 +471,7 @@ namespace Fluff.Pages
         {
             var grid = ((Grid)this.Frame.Parent).Parent as Grid;
             var page = (MainPage)grid.Parent;
-            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = PostHandler.CurrentPost, FileName = PostHandler.CurrentPost.file.md5, FolderName = ""});
+            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = PostHandler.CurrentPost, FileName = PostHandler.CurrentPost.file.md5, FolderName = "" });
         }
         private void CopyPostLink_Click(object sender, RoutedEventArgs e)
         {
@@ -538,7 +574,7 @@ namespace Fluff.Pages
 
         private async void FavoriteButton_Click(object sender, RoutedEventArgs e)
         {
-            if(SettingsHandler.Username == "")
+            if (SettingsHandler.Username == "")
             {
                 var grid = ((Grid)this.Frame.Parent).Parent as Grid;
                 var page = (MainPage)grid.Parent;
@@ -567,9 +603,10 @@ namespace Fluff.Pages
             NewArgs.Page = 1;
             NewArgs.ClickedPool = (Pool)e.ClickedItem;
             NewArgs.Tags = args.Tags;
+            args.ClickedPost = PostHandler.CurrentPost;
             PagesStack.ArgsStack.Add(NewArgs);
 
-            this.Frame.Navigate(typeof(PoolViewPage), PagesStack.ArgsStack.Count()-1, new DrillInNavigationTransitionInfo());
+            this.Frame.Navigate(typeof(PoolViewPage), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
         }
 
         private void CommentsButton_Click(object sender, RoutedEventArgs e)
@@ -586,12 +623,16 @@ namespace Fluff.Pages
         {
             var comments = await host.GetPostComments(PostHandler.CurrentPost.id);
 
-            if(comments == null)
+            if (comments == null)
             {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    CommentsProgress.Visibility = Visibility.Collapsed;
+                });
                 return;
             }
 
-            foreach(var comment in comments)
+            foreach (var comment in comments)
             {
                 comment.body = DTextConverter.ToMarkdown(comment.body);
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -603,6 +644,48 @@ namespace Fluff.Pages
             {
                 CommentsProgress.Visibility = Visibility.Collapsed;
             });
+        }
+
+        private async void LoadRelationships()
+        {
+            var parent = await host.GetPosts($"id:{PostHandler.CurrentPost.relationships.parent_id}", 1);
+            if (parent.Count > 0)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    ParentNoText.Text = "";
+                    ParentViewModel.Add(parent[0]);
+                });
+            }
+            else
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    ParentNoText.Text = "No parent found for this post.";
+                });
+            }
+            if (PostHandler.CurrentPost.relationships.children.Count() > 0)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    ChildrenNoText.Text = "";
+                });
+                foreach (var item in PostHandler.CurrentPost.relationships.children)
+                {
+                    var post = await host.GetPosts($"id:{item}", 1);
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        ChildrenViewModel.Add(post[0]);
+                    });
+                }
+            }
+            else
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    ChildrenNoText.Text = "No children found for this post.";
+                });
+            }
         }
 
         private void CloseCommentsButton_Click(object sender, RoutedEventArgs e)
@@ -644,20 +727,126 @@ namespace Fluff.Pages
             });
         }
 
-        private void MoreButton_Click(object sender, RoutedEventArgs e)
-        {
-            ShowToolBar.Begin();
-        }
 
         private void DescButton_Click(object sender, RoutedEventArgs e)
         {
-            DescText.Text = DTextConverter.ToMarkdown(PostHandler.CurrentPost.description);
-            ShowDesc.Begin();
+            if (DescTrans.X == 0)
+            {
+                HideDesc.Begin();
+            }
+            else
+            {
+                DescText.Text = DTextConverter.ToMarkdown(PostHandler.CurrentPost.description);
+
+                CommentSource.Clear();
+                CommentsProgress.Visibility = Visibility.Visible;
+                Thread t = new Thread(LoadComments);
+                t.Start();
+
+                ParentViewModel.Clear();
+                ChildrenViewModel.Clear();
+                Thread b = new Thread(LoadRelationships);
+                b.Start();
+
+                RightSideBarDef.MinWidth = 400;
+                RightSideBarDef.Width = new GridLength(400);
+                ShowDesc.Begin();
+
+                SourcesTextBox.Text = "";
+                foreach (var item in PostHandler.CurrentPost.sources)
+                {
+                    SourcesTextBox.Text += $"{item}\n\n\n";
+                }
+            }
         }
 
         private void CloseDescButton_Click(object sender, RoutedEventArgs e)
         {
             HideDesc.Begin();
+        }
+
+        private void PostFlipView_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (ToolBarTrans.Y == 0)
+            {
+                HideToolBar.Begin();
+            }
+            else
+            {
+                if (PostHandler.CurrentPost.file.ext == "webm")
+                {
+                    ShowToolBarVideo.Begin();
+                }
+                else {
+                    ShowToolBar.Begin();
+                }
+            }
+        }
+
+        private void TagsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (TagsTrans.X == 0)
+            {
+                HideTags.Begin();
+            }
+            else
+            {
+                LeftSideBarDef.MinWidth = 250;
+                LeftSideBarDef.Width = new GridLength(250);
+                ShowTags.Begin();
+            }
+        }
+
+        private void HideTags_Completed(object sender, object e)
+        {
+            LeftSideBarDef.MinWidth = 0;
+            LeftSideBarDef.Width = new GridLength(0);
+        }
+
+        private void AppBarToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (((AppBarToggleButton)sender).IsChecked.Value)
+            {
+                PostHandler.ShowHighQuality = Visibility.Visible;
+            }
+            else
+            {
+                PostHandler.ShowHighQuality = Visibility.Collapsed;
+            }
+            Bindings.Update();
+        }
+
+        private void CurrentImage_ImageExFailed(object sender, Microsoft.Toolkit.Uwp.UI.Controls.ImageExFailedEventArgs e)
+        {
+            var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+            var page = (MainPage)grid.Parent;
+            page.ShowSystemMessage($"Image Failed to load: {e.ErrorMessage}");
+        }
+
+        private void HideDesc_Completed(object sender, object e)
+        {
+            RightSideBarDef.MinWidth = 0;
+            RightSideBarDef.Width = new GridLength(0);
+        }
+
+        private async void SourcesTextBox_LinkClicked(object sender, Microsoft.Toolkit.Uwp.UI.Controls.LinkClickedEventArgs e)
+        {
+            await Windows.System.Launcher.LaunchUriAsync(new Uri(e.Link));
+        }
+
+        private void GridView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            ObservableCollection<Post> posts = ((GridView)sender).ItemsSource as ObservableCollection<Post>;
+            Post p = e.ClickedItem as Post;
+            PostNavigationArgs NewArgs = new PostNavigationArgs();
+            NewArgs.ClickedPost = p;
+            NewArgs.Page = args.Page;
+            NewArgs.Tags = args.Tags;
+            args.PostsList =  new ObservableCollection<Post>(PostsViewModel);
+            NewArgs.PostsList = new ObservableCollection<Post>(posts);
+            PagesStack.ArgsStack.Add(NewArgs);
+
+            this.Frame.Navigate(typeof(SinglePostView), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
         }
     }
 }

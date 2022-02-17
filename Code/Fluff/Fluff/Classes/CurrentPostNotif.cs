@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.UI.Xaml;
 
 namespace Fluff.Classes
 {
@@ -30,6 +31,20 @@ namespace Fluff.Classes
                 {
                     currentPost = value;
                     NotifyPropertyChanged("CurrentPost");
+                }
+            }
+        }
+
+        private Visibility showHighQuality;
+        public Visibility ShowHighQuality
+        {
+            get { return showHighQuality; }
+            set
+            {
+                if (showHighQuality != value)
+                {
+                    showHighQuality = value;
+                    NotifyPropertyChanged("ShowHighQuality");
                 }
             }
         }

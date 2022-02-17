@@ -139,10 +139,6 @@
                                    Margin="5,0,5,3"
                                    FontSize="18"
                                    FontWeight="SemiBold"/>
-                        <TextBox Width="20"
-                                 Height="35"
-                                 Visibility="Collapsed"
-                                 Margin="10,0,10,0"/>
                         <AppBarButton Width="50"
                                       x:Name="RightNav"
                                       Click="RightNav_Click">

@@ -32,8 +32,10 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="controls:GridSplitter">
-                        <Grid x:Name="RootGrid"
-                          Background="{TemplateBinding Background}">
+                        <Border x:Name="RootGrid"
+                                Width="10"
+                                CornerRadius="20,0,0,0"
+                                Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalContentAlignment="Stretch"
                                           VerticalContentAlignment="Stretch"
                                           Content="{TemplateBinding Element}" />
@@ -42,7 +44,7 @@
                                     <VisualState x:Name="Normal" />
                                     <VisualState x:Name="PointerOver">
                                         <VisualState.Setters>
-                                            <Setter Target="RootGrid.Background" Value="Transparent" />
+                                            <Setter Target="RootGrid.Background" Value="{ThemeResource ResourceKey=SystemAltLowColor}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Pressed">
@@ -52,7 +54,7 @@
                                     </VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
-                        </Grid>
+                        </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -290,14 +292,28 @@
         
         <!-- Gridsplitter allows for resizing of the two panels of this page. -->
         <controls:GridSplitter Width="10" 
-                               Margin="-5,0,0,0"
+                               Margin="-5,5,0,0"
                                Grid.Column="1"
                                HorizontalAlignment="Left"
                                ResizeBehavior="BasedOnAlignment" 
+                               CursorBehavior="ChangeOnSplitterHover"
                                ResizeDirection="Auto"
                                Canvas.ZIndex="1"
                                GripperForeground="Transparent"
                                Background="Transparent">
+            <controls:GridSplitter.Element>
+                <TextBlock HorizontalAlignment="Center"
+                           IsHitTestVisible="False"
+                           VerticalAlignment="Center"
+                           Text="&#xE76F;"
+                           RenderTransformOrigin="0.5,0.5"
+                           Foreground="White"
+                           FontFamily="Segoe MDL2 Assets">
+                    <TextBlock.RenderTransform>
+                        <RotateTransform Angle="90"/>
+                    </TextBlock.RenderTransform>
+                </TextBlock>
+            </controls:GridSplitter.Element>
         </controls:GridSplitter>
 
         <!-- Posts View -->

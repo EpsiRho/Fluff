@@ -29,4 +29,11 @@
 * Updated tag suggestions
 * Fixed multiple downloads
 * Added Descriptions
-* 
+* Added favorite tags
+* Hover animation added to grid splitter to show that sidebar can be resized
+* Redesigned post view
+* Added sources
+* Added post relationships
+* Added clipboard checker when clicking into the window that will ask to open e621 links in app!
+* Fixed Pool search page switching
+* Fixed a crash in pool search

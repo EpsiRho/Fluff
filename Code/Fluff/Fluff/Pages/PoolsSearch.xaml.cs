@@ -39,6 +39,7 @@ namespace Fluff.Pages
         {
             args = PagesStack.ArgsStack[(int)e.Parameter];
             host = new RequestHost(SettingsHandler.UserAgent);
+            PageText.Text = args.Page.ToString();
             PoolsViewModel = new ObservableCollection<Pool>();
 
             if (args.PoolsList == null)
@@ -57,38 +58,45 @@ namespace Fluff.Pages
 
         private async void GetPools()
         {
-            // Get Tags from search
-            string tags = "";
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            try
             {
-                tags = SearchBox.Text;
-                PoolsViewModel.Clear();
-                SearchProgress.Visibility = Visibility.Visible;
-                SearchButtonPanel.Visibility = Visibility.Collapsed;
-            });
-
-            // Login if creds are available 
-            if (SettingsHandler.Username != "" && SettingsHandler.ApiKey != "")
-            {
-                host.Username = SettingsHandler.Username;
-                host.ApiKey = SettingsHandler.ApiKey;
-            }
-
-            var pools = await host.SearchPoolNames(tags);
-
-            foreach(var pool in pools)
-            {
+                // Get Tags from search
+                string tags = "";
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    PoolsViewModel.Add(pool);
+                    tags = SearchBox.Text;
+                    PoolsViewModel.Clear();
+                    SearchProgress.Visibility = Visibility.Visible;
+                    SearchButtonPanel.Visibility = Visibility.Collapsed;
+                });
+
+                // Login if creds are available 
+                if (SettingsHandler.Username != "" && SettingsHandler.ApiKey != "")
+                {
+                    host.Username = SettingsHandler.Username;
+                    host.ApiKey = SettingsHandler.ApiKey;
+                }
+
+                var pools = await host.SearchPoolNames(tags, 75, args.Page);
+
+                foreach (var pool in pools)
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        PoolsViewModel.Add(pool);
+                    });
+                }
+                args.PoolsList = new ObservableCollection<Pool>(PoolsViewModel);
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    SearchProgress.Visibility = Visibility.Collapsed;
+                    SearchButtonPanel.Visibility = Visibility.Visible;
                 });
             }
-            args.PoolsList = new ObservableCollection<Pool>(PoolsViewModel);
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            catch (Exception)
             {
-                SearchProgress.Visibility = Visibility.Collapsed;
-                SearchButtonPanel.Visibility = Visibility.Visible;
-            });
+
+            }
         }
 
         private void SearchListView_ItemClick(object sender, ItemClickEventArgs e)
@@ -104,7 +112,8 @@ namespace Fluff.Pages
 
         private void RightNav_Click(object sender, RoutedEventArgs e)
         {
-            args.Page--;
+            args.Page++;
+            PageText.Text = args.Page.ToString();
             Thread t = new Thread(GetPools);
             t.Start();
         }
@@ -114,6 +123,7 @@ namespace Fluff.Pages
             if (args.Page > 1)
             {
                 args.Page--;
+                PageText.Text = args.Page.ToString();
                 Thread t = new Thread(GetPools);
                 t.Start();
             }
@@ -122,6 +132,7 @@ namespace Fluff.Pages
         private void SearchButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
             args.Page = 1;
+            PageText.Text = args.Page.ToString();
             Thread t = new Thread(GetPools);
             t.Start();
         }
@@ -131,6 +142,7 @@ namespace Fluff.Pages
             if (e.Key == Windows.System.VirtualKey.Enter)
             {
                 args.Page = 1;
+                PageText.Text = args.Page.ToString();
                 Thread t = new Thread(GetPools);
                 t.Start();
             }

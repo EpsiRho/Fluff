@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Graphics.Imaging;
@@ -44,6 +45,7 @@ namespace Fluff
         RequestHost host;
         User CurrentUser;
         bool SysMessIsOpen;
+        string ClipboardText;
 
         public MainPage()
         {
@@ -77,6 +79,59 @@ namespace Fluff
             }
             Thread d = new Thread(LoadFavsFromFile);
             d.Start();
+
+            Window.Current.Activated += Current_Activated;
+        }
+
+        private async void Current_Activated(object sender, Windows.UI.Core.WindowActivatedEventArgs e)
+        {
+            if (e.WindowActivationState != Windows.UI.Core.CoreWindowActivationState.Deactivated)
+            {
+                try
+                {
+                    var content = Clipboard.GetContent();
+                    var txt = await content.GetTextAsync();
+                    if (txt == ClipboardText)
+                    {
+                        return;
+                    }
+                    ClipboardText = txt;
+                    if (CheckIfLink().Value != "NotLink")
+                    {
+                        OpenClipboardAsk.Begin();
+                    }
+
+                }
+                catch (Exception)
+                {
+
+                }
+            }
+        }
+
+        private KeyValuePair<string, string> CheckIfLink()
+        {
+            if (ClipboardText.Contains("https://e621.net/posts/"))
+            {
+                string x = ClipboardText.Replace("https://e621.net/posts/", "");
+                if (x.Contains("?"))
+                {
+                    x = x.Remove(x.IndexOf('?'));
+                }
+                return new KeyValuePair<string, string>(x, "Post");
+            }
+
+            if (ClipboardText.Contains("https://e621.net/posts?"))
+            {
+                return new KeyValuePair<string, string>(ClipboardText.Replace("https://e621.net/posts?tags=", ""),"Search");
+            }
+
+            if (ClipboardText.Contains("https://e621.net/pools/"))
+            {
+                return new KeyValuePair<string, string>(ClipboardText.Replace("https://e621.net/pools/", ""),"Pool");
+            }
+
+            return new KeyValuePair<string, string>("NotLink","NotLink");
         }
 
         #region Settings Functions
@@ -227,7 +282,7 @@ namespace Fluff
             {
                 tags += $"{str}\\n";
             }
-            tags = tags.Substring(0, tags.Length - 3);
+            tags = tags.Substring(0, tags.Length - 2);
 
             string id = CurrentUser.id.ToString();
 
@@ -881,9 +936,54 @@ namespace Fluff
             var success = await Windows.System.Launcher.LaunchUriAsync(uri);
         }
 
+        private void CancelOpenLink_Click(object sender, RoutedEventArgs e)
+        {
+            CloseClipboardAsk.Begin();
+        }
 
+        private async void OpenLinkButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseClipboardAsk.Begin();
 
+            var pair = CheckIfLink();
 
+            if(pair.Value == "Post")
+            {
+                var post = await host.GetPosts($"id:{pair.Key}", 1);
+                var args = new PostNavigationArgs();
+                args.ClickedPost = post[0];
+                args.PostsList = new ObservableCollection<Post>(post);
+                args.Tags = "";
+                PagesStack.ArgsStack.Add(args);
+                contentFrame.Navigate(typeof(SinglePostView), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
+            }
+            if (pair.Value == "Search")
+            {
+                var split = pair.Key.Split('+');
+                string text = "";
+                foreach(var item in split)
+                {
+                    text += $"{item} ";
+                }
+                var post = await host.GetPosts(text, (int)SettingsHandler.PostCount);
+                var args = new PostNavigationArgs();
+                args.ClickedPost = post[0];
+                args.PostsList = new ObservableCollection<Post>(post);
+                args.Tags = text;
+                PagesStack.ArgsStack.Add(args);
+                contentFrame.Navigate(typeof(PostsSearch), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
+            }
+            if (pair.Value == "Pool")
+            {
+                var pool = await host.GetPoolInfo(Convert.ToInt32(pair.Key));
+                PostNavigationArgs NewArgs = new PostNavigationArgs();
+                NewArgs.Page = 1;
+                NewArgs.ClickedPool = pool;
+                NewArgs.Tags = "";
+                PagesStack.ArgsStack.Add(NewArgs);
 
+                contentFrame.Navigate(typeof(PoolViewPage), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
+            }
+        }
     }
 }

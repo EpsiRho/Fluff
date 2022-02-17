@@ -12,8 +12,8 @@
     <Page.Resources>
         <AcrylicBrush x:Key="CustomAcrylicBrush" 
                       BackgroundSource="Backdrop"
-                      TintOpacity="1" 
-                      TintColor="{ThemeResource SystemAltLowColor}" 
+                      TintOpacity="0.7" 
+                      TintColor="{ThemeResource SystemAltHighColor}" 
                       FallbackColor="{ThemeResource SystemAltLowColor}"/>
         <Storyboard x:Name="OpenPostsHalf">
             <DoubleAnimation Duration="0:0:0.1"
@@ -125,6 +125,26 @@
                              Storyboard.TargetName="SystemMessageTranslate"
                              Storyboard.TargetProperty="X"
                              To="700" From="0"/>
+        </Storyboard>
+        <Storyboard x:Name="OpenClipboardAsk">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="ClipboardTrans"
+                             Storyboard.TargetProperty="Y"
+                             To="0"/>
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="ClipboardAsk"
+                             Storyboard.TargetProperty="Opacity"
+                             To="1"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseClipboardAsk">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="ClipboardTrans"
+                             Storyboard.TargetProperty="Y"
+                             To="-300"/>
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="ClipboardAsk"
+                             Storyboard.TargetProperty="Opacity"
+                             To="0"/>
         </Storyboard>
     </Page.Resources>
     <Grid>
@@ -425,6 +445,42 @@
                 </ScrollViewer>
             </Grid>
         </ContentDialog>
+
+        <Border CornerRadius="10"
+                x:Name="ClipboardAsk"
+                VerticalAlignment="Top"
+                MinWidth="150"
+                MaxWidth="400"
+                Grid.Row="1"
+                Opacity="0"
+                HorizontalAlignment="Center"
+                Margin="10,10,10,10"
+                BorderBrush="{ThemeResource SystemChromeAltLowColor}"
+                BorderThickness="2"
+                Canvas.ZIndex="20"
+                Background="{StaticResource CustomAcrylicBrush}">
+            <Border.RenderTransform>
+                <TranslateTransform Y="-300" x:Name="ClipboardTrans"/>
+            </Border.RenderTransform>
+            <Grid>
+                <TextBlock Text="Found e621 link in clipboard, would you like to open it in app?"
+                           FontSize="24"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="10,10,10,14"/>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            Margin="0,80,0,10">
+                    <Button Content="Open"
+                            x:Name="OpenLinkButton"
+                            Margin="0,0,10,0"
+                            Click="OpenLinkButton_Click"/>
+                    <Button Content="Cancel"
+                            x:Name="CancelOpenLink"
+                            Click="CancelOpenLink_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
         <ContentDialog x:Name="UpdateDialog"
                        Title="There is an update for Fluff!"
