@@ -6,8 +6,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls" xmlns:classes="using:Fluff.Classes"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls" 
+    xmlns:classes="using:Fluff.Classes"
     Background="Transparent"
+    Loaded="Page_Loaded"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True">
     <Page.Resources>
         <AcrylicBrush x:Key="CustomAcrylicBrush" 
@@ -212,7 +214,7 @@
                               PointerExited="WikiButton_PointerExited"/>
                 <AppBarButton Icon="Upload" 
                               Label="Upload"
-                              IsEnabled="False"
+                              IsEnabled="True"
                               x:Name="UploadButton"
                               Canvas.ZIndex="1"
                               Click="UploadButton_Click"
@@ -349,6 +351,8 @@
                                 <ToggleSwitch x:Name="CommentSwitch" Margin="10,0,0,0"/>
                                 <TextBlock Text="Mute Videos By Default" Margin="10,0,10,0" FontSize="16"/>
                                 <ToggleSwitch x:Name="VolumeSwitch" Margin="10,0,0,0"/>
+                                <TextBlock Text="Enable Crash Reports" Margin="10,0,10,0" FontSize="16"/>
+                                <ToggleSwitch x:Name="CrashSwitch" Margin="10,0,0,0"/>
                             </StackPanel>
                         </muxc:Expander>
                         <muxc:Expander HorizontalAlignment="Stretch">
@@ -419,8 +423,6 @@
                                            Width="300"
                                            TextAlignment="Center"
                                            TextWrapping="Wrap"/>
-                                <TextBlock Text="Enable Upload Tab" Margin="10,20,10,0" FontSize="16" HorizontalAlignment="Center"/>
-                                <ToggleSwitch x:Name="UploadSwitch" Margin="10,0,0,0" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </muxc:Expander>
                         <muxc:Expander HorizontalAlignment="Stretch">
@@ -482,17 +484,19 @@
             </Grid>
         </Border>
 
-        <ContentDialog x:Name="UpdateDialog"
-                       Title="There is an update for Fluff!"
-                       PrimaryButtonText="Get update!"
-                       PrimaryButtonClick="UpdateDialog_PrimaryButtonClick"
+        <ContentDialog x:Name="AskForPermsDialog"
+                       Title="Crash Report Permission"
+                       PrimaryButtonText="I'll help!"
+                       PrimaryButtonClick="AskForPermsDialog_PrimaryButtonClick"
                        SecondaryButtonText="Maybe later~"
+                       SecondaryButtonClick="AskForPermsDialog_SecondaryButtonClick"
                        DefaultButton="Primary">
             <StackPanel>
-                <TextBlock x:Name="UpdateTitle"
+                <TextBlock Text="Heyo! I've added some code to help me track some weird crashes in Fluff, but I wont send any crash reports without your permission."
                            FontSize="20"
+                           TextWrapping="Wrap"
                            HorizontalAlignment="Left"/>
-                <TextBlock x:Name="UpdateDescription"
+                <TextBlock Text="You can change this at anytime in your settings, but I'd appreciate it if you'd enable it ^w^"
                            FontSize="16"
                            HorizontalAlignment="Left"/>
             </StackPanel>

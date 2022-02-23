@@ -18,6 +18,7 @@ using System.Collections.ObjectModel;
 using Windows.UI.Xaml.Media.Animation;
 using Fluff.Classes;
 using System.Reflection;
+using Microsoft.AppCenter.Analytics;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -53,7 +54,7 @@ namespace Fluff.Pages
         public PostsSearch()
         {
             this.InitializeComponent();
-            host = new RequestHost("Fluff/0.5 (by EpsilonRho)"); // Initialize the api host
+            host = new RequestHost(SettingsHandler.UserAgent); // Initialize the api host
             PostsViewModel = new ObservableCollection<Post>(); // Initialize the post holder
             TagsViewModel = new ObservableCollection<Tag>(); // Initialize the post holder
             CanGetTags = true; // set this to start as true
@@ -72,6 +73,7 @@ namespace Fluff.Pages
             else
             {
                 PostsViewModel = new ObservableCollection<Post>(args.PostsList);
+                SortSelection.SelectedIndex = args.SortOrder;
             }
         }
 
@@ -89,6 +91,8 @@ namespace Fluff.Pages
             NewArgs.Tags = SearchBox.Text;
             args.Tags = SearchBox.Text;
             args.PostsList = new ObservableCollection<Post>(PostsViewModel);
+            args.ClickedPost = p;
+            args.SortOrder = SortSelection.SelectedIndex;
             NewArgs.PostsList = new ObservableCollection<Post>(PostsViewModel);
             PagesStack.ArgsStack.Add(NewArgs);
 
@@ -500,10 +504,6 @@ namespace Fluff.Pages
                     {
                         Counts[tag]++;
                     }
-                    if (tag == "sepf")
-                    {
-
-                    }
                 }
                 foreach (var tag in post.tags.copyright)
                 {
@@ -618,5 +618,61 @@ namespace Fluff.Pages
                 Bindings.Update();
             }
         }
+
+        private void PostsView_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (args.ClickedPost != null)
+            {
+                PostsView.ScrollIntoView(args.ClickedPost, ScrollIntoViewAlignment.Leading);
+            }
+        }
+
+        Post RightTappedPost;
+        private void PostsView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            RightTappedPost = (sender as GridViewItem).DataContext as Post;
+
+            if(RightTappedPost != null)
+            {
+                MenuFlyout flyout = new MenuFlyout();
+                MenuFlyoutItem item1 = new MenuFlyoutItem();
+                item1.Text = "Like Post";
+                item1.Click += LikeTapped;
+                flyout.Items.Add(item1);
+                MenuFlyoutItem item2 = new MenuFlyoutItem();
+                item2.Text = "Dislike Post";
+                item2.Click += DislikeTapped;
+                flyout.Items.Add(item2);
+                MenuFlyoutItem item3 = new MenuFlyoutItem();
+                item3.Text = "Favorite Post";
+                item3.Click += FavTapped;
+                flyout.Items.Add(item3);
+                MenuFlyoutItem item4 = new MenuFlyoutItem();
+                item4.Text = "Download Post";
+                item4.Click += DownloadTapped;
+                flyout.Items.Add(item4);
+                flyout.ShowAt(PostsView, e.GetPosition(PostsView));
+            }
+        }
+
+        private void LikeTapped(object sender, RoutedEventArgs e)
+        {
+            host.VotePost(RightTappedPost.id, 1);
+        }
+        private void DislikeTapped(object sender, RoutedEventArgs e)
+        {
+            host.VotePost(RightTappedPost.id, -1);
+        }
+        private void FavTapped(object sender, RoutedEventArgs e)
+        {
+            host.FavoritePost(RightTappedPost.id);
+        }
+        private void DownloadTapped(object sender, RoutedEventArgs e)
+        {
+            var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+            var page = (MainPage)grid.Parent;
+            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = RightTappedPost, FileName = RightTappedPost.file.md5, FolderName = "" });
+        }
+
     }
 }

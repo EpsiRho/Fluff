@@ -325,6 +325,7 @@
                 
                 <!-- The gridview that hosts posts. -->
                 <GridView x:Name="PostsView"
+                          Loaded="PostsView_Loaded"
                           SelectionMode="None"
                           ItemClick="PostsView_ItemClick"
                           IsItemClickEnabled="True"
@@ -337,6 +338,7 @@
                     <GridView.ItemTemplate>
                         <DataTemplate x:DataType="eapi:Post">
                             <GridViewItem PointerEntered="GridViewItem_PointerEntered"
+                                          RightTapped="PostsView_RightTapped"
                                           PointerExited="GridViewItem_PointerExited">
                                 
                                 <!-- These storyboards move the liked / fav count bar up on hover-->
@@ -358,7 +360,8 @@
                                 <Grid Width="180"
                                       Height="180">
                                     <Image Source="{x:Bind preview.url}"
-                                           Stretch="None"/>
+                                           Stretch="None">
+                                    </Image>
                                     
                                     <!-- This is the bar that flys up on hover -->
                                     <Border CornerRadius="10"
@@ -376,18 +379,18 @@
                                                       FontSize="16"
                                                       x:Name="LikeSymbol"
                                                       Margin="0,8,0,8"/>
-                                            <TextBlock Text="{x:Bind score.total}"
+                                            <TextBlock Text="{x:Bind score.up}"
                                                        FontSize="16"
                                                        RelativePanel.RightOf="LikeSymbol"
                                                        x:Name="LikeText"
                                                        Margin="2,4,5,8"/>
                                             <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
-                                                      Glyph="&#xE006;" 
+                                                      Glyph="&#xE19E;" 
                                                       FontSize="16"
                                                       RelativePanel.RightOf="LikeText"
                                                       x:Name="FavSym"
                                                       Margin="0,8,0,8"/>
-                                            <TextBlock Text="{x:Bind fav_count}"
+                                            <TextBlock Text="{x:Bind score.down}"
                                                        FontSize="16"
                                                        RelativePanel.RightOf="FavSym"
                                                        Margin="5,3,5,8"/>

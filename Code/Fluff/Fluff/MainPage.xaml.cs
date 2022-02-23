@@ -1,6 +1,7 @@
 ﻿using e6API;
 using Fluff.Classes;
 using Fluff.Pages;
+using Microsoft.AppCenter.Crashes;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -185,14 +186,21 @@ namespace Fluff
             }
             try
             {
-                SettingsHandler.EnableUpload = (bool)localSettings.Values["upload"];
-                UploadButton.IsEnabled = SettingsHandler.EnableUpload;
+                bool crashreport = (bool)localSettings.Values["crashreport"];
+                if (crashreport)
+                {
+                    //Crashes.NotifyUserConfirmation(UserConfirmation.AlwaysSend);
+                    //Crashes.SetEnabledAsync(true);
+                }
+                else
+                {
+                    //Crashes.NotifyUserConfirmation(UserConfirmation.DontSend);
+                    //Crashes.SetEnabledAsync(false);
+                }
             }
             catch (Exception)
             {
-                SettingsHandler.EnableUpload = false;
-                localSettings.Values["upload"] = false;
-                UploadButton.IsEnabled = false;
+                localSettings.Values["crashreport"] = false;
             }
         }
         private void SetSettings()
@@ -206,9 +214,8 @@ namespace Fluff
             SettingsHandler.ShowComments = CommentSwitch.IsOn;
             localSettings.Values["volume"] = VolumeSwitch.IsOn;
             SettingsHandler.MuteVolume = VolumeSwitch.IsOn;
-            localSettings.Values["upload"] = UploadSwitch.IsOn;
-            SettingsHandler.EnableUpload = UploadSwitch.IsOn;
-            UploadButton.IsEnabled = UploadSwitch.IsOn;
+            localSettings.Values["crashreport"] = CrashSwitch.IsOn;
+            //Crashes.SetEnabledAsync(CrashSwitch.IsOn);
         }
         private async void SetSettingsUI()
         {
@@ -216,7 +223,9 @@ namespace Fluff
             PostCountSlider.Value = SettingsHandler.PostCount;
             CommentSwitch.IsOn = SettingsHandler.ShowComments;
             VolumeSwitch.IsOn = SettingsHandler.MuteVolume;
-            if(SettingsHandler.Username != "")
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            CrashSwitch.IsOn = (bool)localSettings.Values["crashreport"];
+            if (SettingsHandler.Username != "")
             {
                 var check = await host.TryAuthenticate(SettingsHandler.Username, SettingsHandler.ApiKey);
                 if (!check)
@@ -224,7 +233,6 @@ namespace Fluff
                     ShowSystemMessage("Login Invalid, Please re-login");
                     SettingsHandler.Username = "";
                     SettingsHandler.ApiKey = "";
-                    Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
                     localSettings.Values["username"] = "";
                     localSettings.Values["apikey"] = "";
                     return;
@@ -251,7 +259,7 @@ namespace Fluff
             host.Username = SettingsHandler.Username;
             host.ApiKey = SettingsHandler.ApiKey;
             var users = await host.SearchUsers(SettingsHandler.Username, 1);
-            string[] tags = users[0].blacklisted_tags.Split(" ");
+            string[] tags = users[0].blacklisted_tags.Replace("\r","").Split("\n");
             CurrentUser = users[0];
             if (tags != null)
             {
@@ -259,7 +267,7 @@ namespace Fluff
                 {
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                     {
-                        BlacklistBox.Text += $"{tag}\r\n";
+                        BlacklistBox.Text += $"{tag}\n";
                         BlacklistProgress.Visibility = Visibility.Collapsed;
                     });
                 }
@@ -275,7 +283,7 @@ namespace Fluff
                 tags = BlacklistBox.Text;
             });
 
-            string[] splt = tags.Split("\r\n");
+            string[] splt = tags.Split("\n");
             tags = "";
 
             foreach (string str in splt)
@@ -901,39 +909,40 @@ namespace Fluff
             }
         }
 
-        // Unused update checker for github updates, but waiting on microsoft store review :D
-        private async void CheckForUpdate()
+        // Unused update checker for github updates
+        //private async void CheckForUpdate()
+        //{
+        //    var github = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("Fluff"));
+        //    var releases = await github.Repository.Release.GetAll("EpsiRho", "Fluff");
+        //    if(releases.Count == 0)
+        //    {
+        //        return;
+        //    }
+
+        //    var latest = releases[0];
+
+        //    try
+        //    {
+        //        double latestNum = Convert.ToDouble(latest.TagName);
+
+        //        if (latestNum > 0.5)
+        //        {
+        //            UpdateTitle.Text = latest.Name;
+        //            UpdateDescription.Text = latest.Body;
+        //            UpdateDialog.ShowAsync();
+        //        }
+        //    }
+        //    catch(Exception)
+        //    {
+        //        ShowSystemMessage("Couldn't Check for Update");
+        //    }
+        //}
+        private async void AskForPermsDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
-            var github = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("Fluff"));
-            var releases = await github.Repository.Release.GetAll("EpsiRho", "Fluff");
-            if(releases.Count == 0)
-            {
-                return;
-            }
-
-            var latest = releases[0];
-
-            try
-            {
-                double latestNum = Convert.ToDouble(latest.TagName);
-
-                if (latestNum > 0.5)
-                {
-                    UpdateTitle.Text = latest.Name;
-                    UpdateDescription.Text = latest.Body;
-                    UpdateDialog.ShowAsync();
-                }
-            }
-            catch(Exception)
-            {
-                ShowSystemMessage("Couldn't Check for Update");
-            }
-        }
-        private async void UpdateDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
-        {
-            var uri = new Uri("https://github.com/EpsiRho/Fluff/releases");
-
-            var success = await Windows.System.Launcher.LaunchUriAsync(uri);
+            //Crashes.NotifyUserConfirmation(UserConfirmation.AlwaysSend);
+            //Crashes.SetEnabledAsync(true);
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values["crashreport"] = true;
         }
 
         private void CancelOpenLink_Click(object sender, RoutedEventArgs e)
@@ -983,6 +992,22 @@ namespace Fluff
                 PagesStack.ArgsStack.Add(NewArgs);
 
                 contentFrame.Navigate(typeof(PoolViewPage), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
+            }
+        }
+
+        private void AskForPermsDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            //Crashes.NotifyUserConfirmation(UserConfirmation.DontSend);
+            //.SetEnabledAsync(false);
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values["crashreport"] = false;
+        }
+
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (!await Crashes.IsEnabledAsync())
+            {
+                AskForPermsDialog.ShowAsync();
             }
         }
     }

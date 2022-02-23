@@ -14,6 +14,9 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 
 namespace Fluff
 {
@@ -30,6 +33,20 @@ namespace Fluff
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            //AppCenter.Start("<apikey>", typeof(Analytics), typeof(Crashes));
+        }
+
+        private async void CrashCheck()
+        {
+            bool didAppCrash = await Crashes.HasCrashedInLastSessionAsync();
+            if (didAppCrash)
+            {
+                ErrorReport crashReport = await Crashes.GetLastSessionCrashReportAsync();
+                Crashes.ShouldProcessErrorReport = (ErrorReport report) =>
+                {
+                    return true;
+                };
+            }
         }
 
         /// <summary>

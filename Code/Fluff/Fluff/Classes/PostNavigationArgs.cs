@@ -19,6 +19,7 @@ namespace Fluff.Classes
         public ObservableCollection<Pool> PoolsList { get; set; }
         public int Page { get; set; }
         public string Tags { get; set; }
+        public int SortOrder { get; set; }
     }
 
     public static class PagesStack

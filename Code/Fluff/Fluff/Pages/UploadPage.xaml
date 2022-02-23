@@ -270,8 +270,7 @@
                              OpenPaneLength="250"
                              Background="Transparent"
                              ItemInvoked="NavigationView_ItemInvoked"
-                             IsTitleBarAutoPaddingEnabled="False"  
-                             SelectionChanged="NavigationView_SelectionChanged"
+                             IsTitleBarAutoPaddingEnabled="False"
                              IsSettingsVisible="False"
                              PaneDisplayMode="Left"
                              IsPaneToggleButtonVisible="False">
@@ -352,13 +351,14 @@
                             <Pivot Style="{StaticResource CenteredPivotStyle}"
                                    Margin="0,0,0,50"
                                    Height="400">
-                                <PivotItem Header="From your local files">
+                                <!--<PivotItem Header="From your local files">
                                     <GridViewItem HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          MaxWidth="400"
-                                          Margin="0,0,0,0"
-                                          Padding="10"
-                                          MaxHeight="400">
+                                                  VerticalAlignment="Center"
+                                                  MaxWidth="400"
+                                                  Tapped="AddFileGridViewItem_Tapped"
+                                                  Margin="0,0,0,0"
+                                                  Padding="10"
+                                                  MaxHeight="400">
                                         <Border Margin="0"
                                                 CornerRadius="10"
                                                 MinWidth="100"
@@ -366,16 +366,29 @@
                                                 MinHeight="100">
                                             <Grid>
                                                 <SymbolIcon Symbol="Add"/>
-                                                <Image/>
+                                                <Image x:Name="FileImage"/>
                                             </Grid>
                                         </Border>
                                     </GridViewItem>
-                                </PivotItem>
+                                </PivotItem>-->
                                 <PivotItem Header="From the internet">
-                                    <TextBox HorizontalAlignment="Center"
-                                             VerticalAlignment="Center"
-                                             MinWidth="250"
-                                             Header="URL:"/>
+                                    <StackPanel>
+                                        <TextBox HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 x:Name="AddLinkTextBox"
+                                                 TextChanged="AddLinkTextBox_TextChanged"
+                                                 Width="250"
+                                                 Header="URL:"/>
+                                        <Border CornerRadius="10"
+                                                Margin="0,10,0,0"
+                                                Height="250"
+                                                Width="250">
+                                            <Border.Background>
+                                                <ImageBrush x:Name="LinkImage"
+                                                            Stretch="UniformToFill"/>
+                                            </Border.Background>
+                                        </Border>
+                                    </StackPanel>
                                 </PivotItem>
                             </Pivot>
                         </StackPanel>
@@ -400,18 +413,39 @@
                             <StackPanel Orientation="Horizontal"
                                         HorizontalAlignment="Center"
                                         Margin="0,0,0,10">
-                                <TextBox Width="250"/>
+                                <TextBox Width="250"
+                                         KeyDown="SourcesTextBox_KeyDown"
+                                         x:Name="SourcesTextBox"/>
                                 <Button Width="35"
                                         Margin="10,0,0,0"
                                         Padding="0"
+                                        x:Name="SourcesAddButton"
+                                        Click="SourcesAddButton_Click"
                                         Height="35">
                                     <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                               Glyph="&#xE109;" 
                                               FontSize="18"/>
                                 </Button>
                             </StackPanel>
-                            <ListView x:Name="SourcesList">
-
+                            <ListView x:Name="SourcesList"
+                                      Width="300"
+                                      SelectionMode="None"
+                                      IsItemClickEnabled="True"
+                                      HorizontalAlignment="Center">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ContextFlyout>
+                                                <MenuFlyout>
+                                                    <MenuFlyoutItem Text="Remove"
+                                                                    Tag="{Binding}"
+                                                                    Click="SourcesMenuFlyoutItem_Click"/>
+                                                </MenuFlyout>
+                                            </Grid.ContextFlyout>
+                                            <TextBlock Text="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
                             </ListView>
                         </StackPanel>
                     </Border>
@@ -432,6 +466,17 @@
                                        FontSize="18"
                                        Margin="0,0,0,10"
                                        HorizontalAlignment="Center"/>
+                            <Border Background="#822828"
+                                    CornerRadius="10"
+                                    Margin="0,0,0,10"
+                                    Visibility="Collapsed"
+                                    x:Name="TagsError"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="You need atleast 4 valid tags!"
+                                           HorizontalAlignment="Center"
+                                           Margin="20,5,20,5"
+                                           FontSize="18"/>
+                            </Border>
                             <AutoSuggestBox TextChanged="SearchBox_TextChanged"
                                             SuggestionChosen="SearchBox_SuggestionChosen"
                                             x:Name="SearchBox"
@@ -836,6 +881,17 @@
                                        FontSize="18"
                                        Margin="0,0,0,20"
                                        HorizontalAlignment="Center"/>
+                            <Border Background="#822828"
+                                    CornerRadius="10"
+                                    Margin="0,0,0,10"
+                                    Visibility="Collapsed"
+                                    x:Name="RatingError"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="Please set the rating!"
+                                           HorizontalAlignment="Center"
+                                           Margin="20,5,20,5"
+                                           FontSize="18"/>
+                            </Border>
                             <GridView HorizontalAlignment="Center"
                                       SelectionMode="None">
                                 <GridViewItem>
@@ -884,7 +940,8 @@
                                        FontSize="18"
                                        Margin="0,0,0,0"
                                        HorizontalAlignment="Center"/>
-                            <TextBox Width="250"/>
+                            <TextBox Width="250"
+                                     x:Name="ParentIDBox"/>
                         </StackPanel>
                     </Border>
 
@@ -928,9 +985,22 @@
                                        HorizontalAlignment="Center"/>
                             <TextBlock Text="You made it! Now let's upload it to e621~"
                                        FontSize="18"
-                                       Margin="0,0,0,20"
+                                       Margin="0,0,0,10"
                                        HorizontalAlignment="Center"/>
+                            <Border Background="#822828"
+                                    CornerRadius="10"
+                                    Margin="0,0,0,10"
+                                    Visibility="Collapsed"
+                                    x:Name="UploadError"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="Unmet requirements above!"
+                                           HorizontalAlignment="Center"
+                                           Margin="20,5,20,5"
+                                           FontSize="18"/>
+                            </Border>
                             <Button HorizontalAlignment="Center"
+                                    x:Name="Uploadbutton"
+                                    Click="Uploadbutton_Click"
                                     Margin="0,0,0,10">
                                 <TextBlock Text="Upload!"
                                            FontSize="24"/>
@@ -940,5 +1010,40 @@
                 </StackPanel>
             </ScrollViewer>
         </Border>
+
+        <Border Grid.Column="1"
+                Margin="0"
+                Padding="20"
+                Visibility="Collapsed"
+                x:Name="UploadingPaneBG"
+                Background="{ThemeResource SystemAltMediumColor}"
+                CornerRadius="10"/>
+        <Border Grid.Column="1"
+                Margin="10"
+                x:Name="UploadingPane"
+                Padding="20"
+                Visibility="Collapsed"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                CornerRadius="10">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Upload"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,0"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="We're uploading your post now!"
+                               FontSize="18"
+                               Margin="0,0,0,20"
+                               HorizontalAlignment="Center"/>
+                    <Button HorizontalAlignment="Center"
+                            IsEnabled="False"
+                            Margin="0,0,0,10">
+                        <TextBlock Text="Upload!"
+                                   FontSize="24"/>
+                    </Button>
+                    <muxc:ProgressBar IsIndeterminate="True"
+                                      x:Name="UploadProgress"/>
+                </StackPanel>
+            </Border>
     </Grid>
 </Page>
