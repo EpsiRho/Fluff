@@ -12,7 +12,8 @@
     Loaded="SinglePage_Loaded"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
     xmlns:Interactivity="using:Microsoft.Xaml.Interactivity" 
-    xmlns:Interactions="using:Microsoft.Xaml.Interactions.Core" xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations"
+    xmlns:Interactions="using:Microsoft.Xaml.Interactions.Core" 
+    xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations"
     mc:Ignorable="d"
     Background="Transparent">
     <Page.Resources>
@@ -164,7 +165,7 @@
                              Storyboard.TargetName="TagsTrans"/>
         </Storyboard>
     </Page.Resources>
-    <Grid>
+    <Grid x:Name="FullGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0" 
                               x:Name="LeftSideBarDef"/>
@@ -179,265 +180,254 @@
                                     x:Name="TagsTrans"/>
             </ScrollViewer.RenderTransform>
             <StackPanel>
-                <HyperlinkButton x:Name="ArtistsTitle" 
+                <StackPanel x:Name="ArtistStack">
+                    <HyperlinkButton x:Name="ArtistsTitle" 
                                  Foreground="{ThemeResource SystemBaseHighColor}" 
                                  Margin="5,0,0,0" 
                                  Padding="5,2,5,5"
                                  Click="Title_Click">
-                    <HyperlinkButton.Content>
-                        <TextBlock Text="Artist:"
+                        <HyperlinkButton.Content>
+                            <TextBlock Text="Artist"
                                    FontSize="24"
                                    FontWeight="SemiBold"/>
-                    </HyperlinkButton.Content>
-                </HyperlinkButton>
-                <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                        </HyperlinkButton.Content>
+                    </HyperlinkButton>
+                    <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
                            Height="2"
                            Margin="10,-5,10,0"/>
-                <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.artist, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.artist, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           x:Name="ArtistsTags"
                           IsItemClickEnabled="True"
                           SelectionMode="None"
                           ItemClick="TagList_ItemClick">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" 
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
                                        Foreground="#f2ac08"
                                        FontSize="18"/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <HyperlinkButton x:Name="CopyrightTitle" 
-                                 Foreground="{ThemeResource SystemBaseHighColor}" 
-                                 Margin="5,0,0,0" 
-                                 Padding="5,2,5,5"
-                                 Click="Title_Click">
-                    <HyperlinkButton.Content>
-                        <TextBlock Text="Copyrights:"
-                                   FontSize="24"
-                                   FontWeight="SemiBold"/>
-                    </HyperlinkButton.Content>
-                </HyperlinkButton>
-                <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                           Height="2"
-                           Margin="10,-5,10,0"/>
-                <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.copyright, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          x:Name="CopyrightsTags"
-                          IsItemClickEnabled="True"
-                          SelectionMode="None"
-                          ItemClick="TagList_ItemClick">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" 
-                                       FontSize="16" 
-                                       Foreground="#ff5eff"
-                                       TextTrimming="CharacterEllipsis"/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <HyperlinkButton x:Name="CharactersTitle" 
-                                 Foreground="{ThemeResource SystemBaseHighColor}" 
-                                 Margin="5,0,0,0" 
-                                 Padding="5,2,5,5"
-                                 Click="Title_Click">
-                    <HyperlinkButton.Content>
-                        <TextBlock Text="Characters:"
-                                   FontSize="24"
-                                   FontWeight="SemiBold"/>
-                    </HyperlinkButton.Content>
-                </HyperlinkButton>
-                <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                           Height="2"
-                           Margin="10,-5,10,0"/>
-                <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.character, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          x:Name="CharactersTags"
-                          IsItemClickEnabled="True"
-                          SelectionMode="None"
-                          ItemClick="TagList_ItemClick">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" 
-                                       FontSize="16" 
-                                       Foreground="#2bff2b"
-                                       TextTrimming="CharacterEllipsis"/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <HyperlinkButton x:Name="SpeciesTitle" 
-                                 Foreground="{ThemeResource SystemBaseHighColor}" 
-                                 Margin="5,0,0,0" 
-                                 Padding="5,2,5,5"
-                                 Click="Title_Click">
-                    <HyperlinkButton.Content>
-                        <TextBlock Text="Species:"
-                                   FontSize="24"
-                                   FontWeight="SemiBold"/>
-                    </HyperlinkButton.Content>
-                </HyperlinkButton>
-                <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                           Height="2"
-                           Margin="10,-5,10,0"/>
-                <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.species, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          x:Name="SpeciesTags"
-                          IsItemClickEnabled="True"
-                          SelectionMode="None"
-                          ItemClick="TagList_ItemClick">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" 
-                                       FontSize="16" 
-                                       Foreground="#ed5d1f"
-                                       TextTrimming="CharacterEllipsis"/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <HyperlinkButton x:Name="GeneralTitle" 
-                                 Foreground="{ThemeResource SystemBaseHighColor}"
-                                 Margin="5,0,0,0" 
-                                 Padding="5,2,5,5"
-                                 Click="Title_Click">
-                    <HyperlinkButton.Content>
-                        <TextBlock Text="General:"
-                                   FontSize="24"
-                                   FontWeight="SemiBold"/>
-                    </HyperlinkButton.Content>
-                </HyperlinkButton>
-                <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                           Height="2"
-                           Margin="10,-5,10,0"/>
-                <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.general, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          x:Name="GeneralTags"
-                          IsItemClickEnabled="True"
-                          SelectionMode="None"
-                          ItemClick="TagList_ItemClick">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" 
-                                       FontSize="16" 
-                                       Foreground="#a5c7d0"
-                                       TextTrimming="CharacterEllipsis"/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <HyperlinkButton x:Name="MetaTitle" 
-                                 Foreground="{ThemeResource SystemBaseHighColor}"
-                                 Margin="5,0,0,0" 
-                                 Padding="5,2,5,5"
-                                 Click="Title_Click">
-                    <HyperlinkButton.Content>
-                        <TextBlock Text="Meta:"
-                                   FontSize="24"
-                                   FontWeight="SemiBold"/>
-                    </HyperlinkButton.Content>
-                </HyperlinkButton>
-                <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                           Height="2"
-                           Margin="10,-5,10,0"/>
-                <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.meta, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          x:Name="MetaTags"
-                          IsItemClickEnabled="True"
-                          SelectionMode="None"
-                          ItemClick="TagList_ItemClick">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" 
-                                       FontSize="16" 
-                                       TextTrimming="CharacterEllipsis"/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <HyperlinkButton x:Name="LoreTitle" 
-                                 Foreground="{ThemeResource SystemBaseHighColor}" 
-                                 Margin="5,0,0,0" 
-                                 Padding="5,2,5,5"
-                                 Click="Title_Click">
-                    <HyperlinkButton.Content>
-                        <TextBlock Text="Lore:"
-                                   FontSize="24"
-                                   FontWeight="SemiBold"/>
-                    </HyperlinkButton.Content>
-                </HyperlinkButton>
-                <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                           Height="2"
-                           Margin="10,-5,10,0"/>
-                <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.lore, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          x:Name="LoreTags"
-                          IsItemClickEnabled="True"
-                          SelectionMode="None"
-                          ItemClick="TagList_ItemClick">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" 
-                                       FontSize="16" 
-                                       Foreground="#228831"
-                                       TextTrimming="CharacterEllipsis"/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <HyperlinkButton x:Name="InvalidTitle" 
-                                 Foreground="{ThemeResource SystemBaseHighColor}"
-                                 Margin="5,0,0,0" 
-                                 Padding="5,2,5,5"
-                                 Click="Title_Click">
-                    <HyperlinkButton.Content>
-                        <TextBlock Text="Invalid:"
-                                   FontSize="24"
-                                   FontWeight="SemiBold"
-                                   TextDecorations="Underline"/>
-                    </HyperlinkButton.Content>
-                </HyperlinkButton>
-                <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                           Height="2"
-                           Margin="10,-5,10,0"/>
-                <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.invalid, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          x:Name="InvalidTags"
-                          IsItemClickEnabled="True"
-                          SelectionMode="None"
-                          ItemClick="TagList_ItemClick">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" 
-                                       FontSize="16" 
-                                       Foreground="#882121"
-                                       TextTrimming="CharacterEllipsis"/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+                <StackPanel x:Name="CopyrightStack">
+                    <HyperlinkButton x:Name="CopyrightTitle" 
+                             Foreground="{ThemeResource SystemBaseHighColor}" 
+                             Margin="5,0,0,0" 
+                             Padding="5,2,5,5"
+                             Click="Title_Click">
+                        <HyperlinkButton.Content>
+                            <TextBlock Text="Copyrights"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"/>
+                        </HyperlinkButton.Content>
+                    </HyperlinkButton>
+                    <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                               Height="2"
+                               Margin="10,-5,10,0"/>
+                    <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.copyright, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              x:Name="CopyrightsTags"
+                              IsItemClickEnabled="True"
+                              SelectionMode="None"
+                              ItemClick="TagList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
+                                           FontSize="16" 
+                                           Foreground="#ff5eff"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+                <StackPanel x:Name="CharactersStack">
+                    <HyperlinkButton x:Name="CharactersTitle" 
+                                     Foreground="{ThemeResource SystemBaseHighColor}" 
+                                     Margin="5,0,0,0" 
+                                     Padding="5,2,5,5"
+                                     Click="Title_Click">
+                        <HyperlinkButton.Content>
+                            <TextBlock Text="Characters"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"/>
+                        </HyperlinkButton.Content>
+                    </HyperlinkButton>
+                    <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                               Height="2"
+                               Margin="10,-5,10,0"/>
+                    <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.character, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              x:Name="CharactersTags"
+                              IsItemClickEnabled="True"
+                              SelectionMode="None"
+                              ItemClick="TagList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
+                                           FontSize="16" 
+                                           Foreground="#2bff2b"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+                <StackPanel x:Name="SpeciesStack">
+                    <HyperlinkButton x:Name="SpeciesTitle" 
+                                     Foreground="{ThemeResource SystemBaseHighColor}" 
+                                     Margin="5,0,0,0" 
+                                     Padding="5,2,5,5"
+                                     Click="Title_Click">
+                        <HyperlinkButton.Content>
+                            <TextBlock Text="Species"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"/>
+                        </HyperlinkButton.Content>
+                    </HyperlinkButton>
+                    <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                               Height="2"
+                               Margin="10,-5,10,0"/>
+                    <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.species, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              x:Name="SpeciesTags"
+                              IsItemClickEnabled="True"
+                              SelectionMode="None"
+                              ItemClick="TagList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
+                                           FontSize="16" 
+                                           Foreground="#ed5d1f"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+                <StackPanel x:Name="GeneralStack">
+                    <HyperlinkButton x:Name="GeneralTitle" 
+                                     Foreground="{ThemeResource SystemBaseHighColor}"
+                                     Margin="5,0,0,0" 
+                                     Padding="5,2,5,5"
+                                     Click="Title_Click">
+                        <HyperlinkButton.Content>
+                            <TextBlock Text="General"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"/>
+                        </HyperlinkButton.Content>
+                    </HyperlinkButton>
+                    <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                               Height="2"
+                               Margin="10,-5,10,0"/>
+                    <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.general, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              x:Name="GeneralTags"
+                              IsItemClickEnabled="True"
+                              SelectionMode="None"
+                              ItemClick="TagList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
+                                           FontSize="16" 
+                                           Foreground="#a5c7d0"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+                <StackPanel x:Name="MetaStack">
+                    <HyperlinkButton x:Name="MetaTitle" 
+                                     Foreground="{ThemeResource SystemBaseHighColor}"
+                                     Margin="5,0,0,0" 
+                                     Padding="5,2,5,5"
+                                     Click="Title_Click">
+                        <HyperlinkButton.Content>
+                            <TextBlock Text="Meta"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"/>
+                        </HyperlinkButton.Content>
+                    </HyperlinkButton>
+                    <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                               Height="2"
+                               Margin="10,-5,10,0"/>
+                    <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.meta, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              x:Name="MetaTags"
+                              IsItemClickEnabled="True"
+                              SelectionMode="None"
+                              ItemClick="TagList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
+                                           FontSize="16" 
+                                           TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+                <StackPanel x:Name="LoreStack">
+                    <HyperlinkButton x:Name="LoreTitle" 
+                                     Foreground="{ThemeResource SystemBaseHighColor}" 
+                                     Margin="5,0,0,0" 
+                                     Padding="5,2,5,5"
+                                     Click="Title_Click">
+                        <HyperlinkButton.Content>
+                            <TextBlock Text="Lore"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"/>
+                        </HyperlinkButton.Content>
+                    </HyperlinkButton>
+                    <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                               Height="2"
+                               Margin="10,-5,10,0"/>
+                    <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.lore, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              x:Name="LoreTags"
+                              IsItemClickEnabled="True"
+                              SelectionMode="None"
+                              ItemClick="TagList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
+                                           FontSize="16" 
+                                           Foreground="#228831"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+                <StackPanel x:Name="InvalidStack">
+                    <HyperlinkButton x:Name="InvalidTitle" 
+                                     Foreground="{ThemeResource SystemBaseHighColor}"
+                                     Margin="5,0,0,0" 
+                                     Padding="5,2,5,5"
+                                     Click="Title_Click">
+                        <HyperlinkButton.Content>
+                            <TextBlock Text="Invalid"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"
+                                       TextDecorations="Underline"/>
+                        </HyperlinkButton.Content>
+                    </HyperlinkButton>
+                    <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                               Height="2"
+                               Margin="10,-5,10,0"/>
+                    <ListView ItemsSource="{x:Bind PostHandler.CurrentPost.tags.invalid, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              x:Name="InvalidTags"
+                              IsItemClickEnabled="True"
+                              SelectionMode="None"
+                              ItemClick="TagList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
+                                           FontSize="16" 
+                                           Foreground="#882121"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
-
-        <controls:GridSplitter Width="10" 
-                               Margin="-5,5,0,0"
-                               Grid.Column="1"
-                               HorizontalAlignment="Left"
-                               ResizeBehavior="BasedOnAlignment" 
-                               CursorBehavior="ChangeOnSplitterHover"
-                               ResizeDirection="Auto"
-                               Canvas.ZIndex="1"
-                               GripperForeground="Transparent"
-                               Background="Transparent">
-            <controls:GridSplitter.Element>
-                <TextBlock HorizontalAlignment="Center"
-                           IsHitTestVisible="False"
-                           VerticalAlignment="Center"
-                           Text="&#xE76F;"
-                           RenderTransformOrigin="0.5,0.5"
-                           Foreground="White"
-                           FontFamily="Segoe MDL2 Assets">
-                    <TextBlock.RenderTransform>
-                        <TransformGroup>
-                            <RotateTransform Angle="90"/>
-                            <TranslateTransform X="-2"/>
-                        </TransformGroup>
-                    </TextBlock.RenderTransform>
-                </TextBlock>
-            </controls:GridSplitter.Element>
-        </controls:GridSplitter>
 
         <Border CornerRadius="0,0,0,0"
                 Grid.Column="1">
             <FlipView x:Name="PostFlipView"
                       Background="Transparent"
                       Tapped="PostFlipView_Tapped"
+                      Canvas.ZIndex="0"
                       SelectionChanged="PostFlipView_SelectionChanged"
                       Grid.Column="1"
                       ItemsSource="{x:Bind PostsViewModel}">
@@ -452,9 +442,27 @@
                                                x:Name="ImageLoadProgress"
                                                RelativePanel.AlignHorizontalCenterWith="FlipViewPipsPager"
                                                VerticalAlignment="Center"/>
-                            <controls:ImageEx Source="{x:Bind file.url}"
-                                              Visibility="Visible"
-                                              x:Name="CurrentImage"/>
+                            <ScrollViewer x:Name="ImageScrollView"
+                                          MinZoomFactor="1"
+                                          MaxZoomFactor="5"
+                                          ZoomMode="Enabled"
+                                          Visibility="Visible"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          DoubleTapped="ImageScrollView_OnDoubleTapped" >
+                                <Grid VerticalAlignment="Center" 
+                                      HorizontalAlignment="Center">
+                                    <controls:ImageEx Source="{x:Bind sample.url}"
+                                                      Visibility="Visible"
+                                                      Width="{Binding ElementName=ImageScrollView, Path=ViewportWidth}"
+                                                      Height="{Binding ElementName=ImageScrollView, Path=ViewportHeight}"/>
+                                    <controls:ImageEx Source="{x:Bind file.url}"
+                                                      Visibility="Visible"
+                                                      Width="{Binding ElementName=ImageScrollView, Path=ViewportWidth}"
+                                                      Height="{Binding ElementName=ImageScrollView, Path=ViewportHeight}"
+                                                      x:Name="CurrentImage"/>
+                                </Grid>
+                            </ScrollViewer>
                             <MediaElement Source="{x:Bind file.url}"
                                           PosterSource="{x:Bind preview.url}"
                                           AutoPlay="False"
@@ -496,126 +504,143 @@
                                       TintColor="Black" 
                                       FallbackColor="{ThemeResource SystemAltLowColor}"/>
             </Border.Background>
-            <CommandBar>
-                <CommandBar.SecondaryCommands>
-                    <AppBarButton Icon="Copy" Label="Copy Image"
+            <Grid>
+                <muxc:ProgressBar VerticalAlignment="Bottom"
+                                  x:Name="AutoScrollProgress"
+                                  HorizontalAlignment="Stretch"
+                                  Margin="0,0,0,0"
+                                  Background="Transparent"/>
+                <CommandBar>
+                    <CommandBar.SecondaryCommands>
+                        <AppBarButton Icon="Copy" Label="Copy Image"
                                   Click="CopyImage_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="C" />
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                    <AppBarButton Icon="Save" Label="Save Image"
+                            <AppBarButton.KeyboardAccelerators>
+                                <KeyboardAccelerator Modifiers="Control" Key="C" />
+                            </AppBarButton.KeyboardAccelerators>
+                        </AppBarButton>
+                        <AppBarButton Icon="Save" Label="Save Image"
                                   Click="SaveImage_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="S" />
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                    <AppBarButton Icon="Share" Label="Copy Post Link"
+                            <AppBarButton.KeyboardAccelerators>
+                                <KeyboardAccelerator Modifiers="Control" Key="S" />
+                            </AppBarButton.KeyboardAccelerators>
+                        </AppBarButton>
+                        <AppBarButton Icon="Share" Label="Copy Post Link"
                                   Click="CopyPostLink_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="L" />
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                </CommandBar.SecondaryCommands>
-                <AppBarButton Click="TagsButton_Click"
+                            <AppBarButton.KeyboardAccelerators>
+                                <KeyboardAccelerator Modifiers="Control" Key="L" />
+                            </AppBarButton.KeyboardAccelerators>
+                        </AppBarButton>
+                    </CommandBar.SecondaryCommands>
+                    <AppBarButton Click="TagsButton_Click"
                               Foreground="White"
                               ToolTipService.ToolTip="Show/Hide Tags"
                               Width="50">
-                    <AppBarButton.Content>
-                        <StackPanel Orientation="Horizontal">
-                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                        <AppBarButton.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                       Glyph="&#xE1CB;"
                                       FontSize="18"/>
-                        </StackPanel>
-                    </AppBarButton.Content>
-                </AppBarButton>
-                <AppBarButton Width="50"
+                            </StackPanel>
+                        </AppBarButton.Content>
+                    </AppBarButton>
+                    <AppBarButton Width="50"
                               ToolTipService.ToolTip="Show Pools">
-                    <AppBarButton.Flyout>
-                        <Flyout Placement="BottomEdgeAlignedLeft">
-                            <Grid>
-                                <ListView x:Name="PoolsListView"
+                        <AppBarButton.Flyout>
+                            <Flyout Placement="BottomEdgeAlignedLeft">
+                                <Grid>
+                                    <ListView x:Name="PoolsListView"
                                           MaxHeight="200"
                                           Margin="-15,-13,-15,-15"
                                           IsItemClickEnabled="True"
                                           SelectionMode="None"
                                           ItemClick="PoolsListView_ItemClick"
                                           ItemsSource="{x:Bind PoolsSource}">
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="eapi:Pool">
-                                            <Grid>
-                                                <TextBlock Text="{x:Bind name}"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
-                            </Grid>
-                        </Flyout>
-                    </AppBarButton.Flyout>
-                    <AppBarButton.Content>
-                        <StackPanel Orientation="Horizontal">
-                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="eapi:Pool">
+                                                <Grid>
+                                                    <TextBlock Text="{x:Bind name}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </Grid>
+                            </Flyout>
+                        </AppBarButton.Flyout>
+                        <AppBarButton.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                       Glyph="&#xE158;"/>
-                        </StackPanel>
-                    </AppBarButton.Content>
-                </AppBarButton>
-                <AppBarButton Click="FavoriteButton_Click"
+                            </StackPanel>
+                        </AppBarButton.Content>
+                    </AppBarButton>
+                    <AppBarToggleButton Click="AutoPlayButton_Click"
+                                    x:Name="AutoPlayButton"
+                                    Foreground="White"
+                                    ToolTipService.ToolTip="Auto scroll posts, adjust in your settings!"
+                                    Width="50">
+                        <AppBarToggleButton.Content>
+                            <SymbolIcon Symbol="Play"/>
+                        </AppBarToggleButton.Content>
+                    </AppBarToggleButton>
+                    <AppBarButton Click="FavoriteButton_Click"
                               Foreground="White"
                               ToolTipService.ToolTip="Favorite Post"
                               Width="50">
-                    <AppBarButton.Content>
-                        <StackPanel Orientation="Horizontal">
-                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                        <AppBarButton.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                       Glyph="&#xE1CE;"
                                       x:Name="FavoriteButton"
                                       FontSize="18"/>
-                        </StackPanel>
-                    </AppBarButton.Content>
-                </AppBarButton>
-                <AppBarButton Width="50"
+                            </StackPanel>
+                        </AppBarButton.Content>
+                    </AppBarButton>
+                    <AppBarButton Width="50"
                               FontWeight="SemiBold"
                               ToolTipService.ToolTip="Like Post"
                               Foreground="White"
                               Label="{x:Bind PostHandler.CurrentPost.score.up, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               Click="LikeButton_Click">
-                    <AppBarButton.Icon>
-                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                   Glyph="&#xE19F;" 
                                   FontSize="18"
                                   x:Name="LikeButton"/>
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarButton Click="DislikeButton_Click"
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Click="DislikeButton_Click"
                               ToolTipService.ToolTip="Dislike Post"
                               Foreground="White"
                               Label="{x:Bind PostHandler.CurrentPost.score.down, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               Width="50">
-                    <AppBarButton.Icon>
-                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                   Glyph="&#xE19E;" 
                                   x:Name="DislikeButton"
                                   FontSize="18"/>
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarButton Click="DescButton_Click"
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Click="DescButton_Click"
                               ToolTipService.ToolTip="Show Post Info"
                               Foreground="White"
                               Width="50">
-                    <AppBarButton.Content>
-                        <StackPanel Orientation="Horizontal">
-                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                        <AppBarButton.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" 
                                           Glyph="&#xE12A;" 
                                           FontSize="18"/>
-                        </StackPanel>
-                    </AppBarButton.Content>
-                </AppBarButton>
-            </CommandBar>
+                            </StackPanel>
+                        </AppBarButton.Content>
+                    </AppBarButton>
+                </CommandBar>
+            </Grid>
         </Border>
 
         <Border x:Name="ThumbnailBar"
                 Grid.Column="1"
                 HorizontalAlignment="Center"
                 Height="80"
+                Canvas.ZIndex="10"
                 Margin="50,10,50,10"
                 Opacity="0"
                 MaxWidth="700"
@@ -644,11 +669,12 @@
                     <DataTemplate x:DataType="eapi:Post">
                         <Grid Height="60">
                             <Image Source="{x:Bind preview.url}"
-                                       Height="60"
-                                       Tag="{x:Bind file.md5}"
-                                       Width="60"
-                                       VerticalAlignment="Center"
-                                       Stretch="UniformToFill"/>
+                                   Height="60"
+                                   x:Name="ItemImage"
+                                   Tag="{x:Bind file.md5}"
+                                   Width="60"
+                                   VerticalAlignment="Center"
+                                   Stretch="UniformToFill"/>
                         </Grid>
                     </DataTemplate>
                 </GridView.ItemTemplate>
@@ -698,118 +724,124 @@
                                     x:Name="DescTrans"/>
             </Border.RenderTransform>
             <Grid>
-                <ScrollViewer HorizontalAlignment="Left"
+                <ScrollViewer HorizontalAlignment="Stretch"
                               Margin="10,0,10,0"
                               VerticalAlignment="Top">
                     <StackPanel>
-                        <TextBlock Text="Description"
-                                   FontSize="24"/>
-                        <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                                    Height="2"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,5,0,0"/>
-                        <controls:MarkdownTextBlock x:Name="DescText"
-                                                    Background="Transparent"
-                                                    IsTextSelectionEnabled="True"
-                                                    HorizontalAlignment="Left"
-                                                    FontSize="16"
-                                                    TextWrapping="Wrap"/>
-                        <TextBlock Text="Parent"
-                                   Margin="0,10,0,0"
-                                   FontSize="24"/>
-                        <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                                    Height="2"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,5,0,0"/>
-                        <Grid>
-                            <TextBlock x:Name="ParentNoText"/>
-                            <GridView ItemsSource="{x:Bind ParentViewModel}"
-                                      Margin="10,10,10,10"
-                                      ItemClick="GridView_ItemClick"
-                                      IsItemClickEnabled="True"
-                                      SelectionMode="None"
-                                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                      ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                                      ScrollViewer.HorizontalScrollMode="Enabled"
-                                      ScrollViewer.VerticalScrollMode="Disabled">
-                                <GridView.ItemTemplate>
-                                    <DataTemplate x:DataType="eapi:Post">
-                                        <Grid Height="60">
-                                            <Image Source="{x:Bind preview.url}"
-                                                   Height="60"
-                                                   Tag="{x:Bind file.md5}"
-                                                   Width="60"
-                                                   VerticalAlignment="Center"
-                                                   Stretch="UniformToFill"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </GridView.ItemTemplate>
-                                <GridView.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <ItemsWrapGrid MaximumRowsOrColumns="1"/>
-                                    </ItemsPanelTemplate>
-                                </GridView.ItemsPanel>
-                            </GridView>
-                        </Grid>
-                        <TextBlock Text="Children"
-                                   Margin="0,10,0,0"
-                                   FontSize="24"/>
-                        <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                                    Height="2"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,5,0,0"/>
-                        <Grid>
-                            <TextBlock x:Name="ChildrenNoText"/>
-                            <GridView ItemsSource="{x:Bind ChildrenViewModel}"
-                                      Margin="10,10,10,10"
-                                      ItemClick="GridView_ItemClick"
-                                      IsItemClickEnabled="True"
-                                      SelectionMode="None"
-                                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                      ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                                      ScrollViewer.HorizontalScrollMode="Enabled"
-                                      ScrollViewer.VerticalScrollMode="Disabled">
-                                <GridView.ItemTemplate>
-                                    <DataTemplate x:DataType="eapi:Post">
-                                        <Grid Height="100">
-                                            <Image Source="{x:Bind preview.url}"
-                                                   Height="100"
-                                                   Tag="{x:Bind file.md5}"
-                                                   VerticalAlignment="Center"
-                                                   Stretch="UniformToFill"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </GridView.ItemTemplate>
-                                <GridView.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <ItemsWrapGrid MaximumRowsOrColumns="1"/>
-                                    </ItemsPanelTemplate>
-                                </GridView.ItemsPanel>
-                            </GridView>
-                        </Grid>
-                        <TextBlock Text="Sources"
-                                   Margin="0,10,0,0"
-                                   FontSize="24"/>
-                        <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                                    Height="2"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,5,0,0"/>
-                        <controls:MarkdownTextBlock x:Name="SourcesTextBox"
-                                                    Background="Transparent"
-                                                    LinkClicked="SourcesTextBox_LinkClicked"
-                                                    Margin="0,10,0,0"
-                                                    FontSize="16"/>
-                        <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
-                                    Height="2"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,5,0,0"/>
-                        <Grid>
+                        <StackPanel x:Name="DescStack" Margin="0,0,0,10">
+                            <TextBlock Text="Description"
+                                       FontSize="24"/>
+                            <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                                        Height="2"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,5,0,0"/>
+                            <controls:MarkdownTextBlock x:Name="DescText"
+                                                        Background="Transparent"
+                                                        IsTextSelectionEnabled="True"
+                                                        HorizontalAlignment="Left"
+                                                        FontSize="16"
+                                                        TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <StackPanel x:Name="ParentStack" Visibility="Collapsed" Margin="0,0,0,10">
+                            <TextBlock Text="Parent"
+                                       Margin="0,10,0,0"
+                                       FontSize="24"/>
+                            <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                                        Height="2"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,5,0,0"/>
+                            <Grid>
+                                <GridView ItemsSource="{x:Bind ParentViewModel}"
+                                          Margin="10,10,10,10"
+                                          ItemClick="GridView_ItemClick"
+                                          IsItemClickEnabled="True"
+                                          SelectionMode="None"
+                                          ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                          ScrollViewer.HorizontalScrollMode="Enabled"
+                                          ScrollViewer.VerticalScrollMode="Disabled">
+                                    <GridView.ItemTemplate>
+                                        <DataTemplate x:DataType="eapi:Post">
+                                            <Grid Height="60">
+                                                <Image Source="{x:Bind preview.url}"
+                                                       Height="60"
+                                                       Tag="{x:Bind file.md5}"
+                                                       Width="60"
+                                                       VerticalAlignment="Center"
+                                                       Stretch="UniformToFill"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridView.ItemTemplate>
+                                    <GridView.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <ItemsWrapGrid MaximumRowsOrColumns="1"/>
+                                        </ItemsPanelTemplate>
+                                    </GridView.ItemsPanel>
+                                </GridView>
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel x:Name="ChildrenStack" Visibility="Collapsed" Margin="0,0,0,10">
+                            <TextBlock Text="Children"
+                                       Margin="0,10,0,0"
+                                       FontSize="24"/>
+                            <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                                        Height="2"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,5,0,0"/>
+                            <Grid>
+                                <GridView ItemsSource="{x:Bind ChildrenViewModel}"
+                                          Margin="10,10,10,10"
+                                          ItemClick="GridView_ItemClick"
+                                          IsItemClickEnabled="True"
+                                          SelectionMode="None"
+                                          ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                          ScrollViewer.HorizontalScrollMode="Enabled"
+                                          ScrollViewer.VerticalScrollMode="Disabled">
+                                    <GridView.ItemTemplate>
+                                        <DataTemplate x:DataType="eapi:Post">
+                                            <Grid Height="100">
+                                                <Image Source="{x:Bind preview.url}"
+                                                       Height="100"
+                                                       Tag="{x:Bind file.md5}"
+                                                       VerticalAlignment="Center"
+                                                       Stretch="UniformToFill"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridView.ItemTemplate>
+                                    <GridView.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <ItemsWrapGrid MaximumRowsOrColumns="1"/>
+                                        </ItemsPanelTemplate>
+                                    </GridView.ItemsPanel>
+                                </GridView>
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel x:Name="SourcesStack" Margin="0,0,0,10">
+                            <TextBlock Text="Sources"
+                                       Margin="0,10,0,0"
+                                       FontSize="24"/>
+                            <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                                        Height="2"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,5,0,0"/>
+                            <controls:MarkdownTextBlock x:Name="SourcesTextBox"
+                                                        Background="Transparent"
+                                                        LinkClicked="SourcesTextBox_LinkClicked"
+                                                        Margin="0,10,0,0"
+                                                        FontSize="16"/>
+                        </StackPanel>
+                        <Grid HorizontalAlignment="Stretch">
                             <ScrollViewer>
-                                <StackPanel>
-                                    <TextBlock Text="Comments:"
-                                               FontSize="32"
+                                <StackPanel HorizontalAlignment="Stretch">
+                                    <TextBlock Text="Comments"
+                                               FontSize="24"
                                                Margin="0,5,0,0"
-                                               HorizontalAlignment="Center"/>
+                                               HorizontalAlignment="Left"/>
+                                    <Rectangle Fill="{ThemeResource SystemBaseHighColor}"
+                                               Height="2"
+                                               HorizontalAlignment="Stretch"
+                                               Margin="0,5,0,0"/>
                                     <muxc:ProgressBar x:Name="CommentsProgress"
                                                       HorizontalAlignment="Stretch"
                                                       IsIndeterminate="True"/>
@@ -818,7 +850,7 @@
                                                  AcceptsReturn="True"
                                                  MaxHeight="150"
                                                  x:Name="CommentTextBox"
-                                                 Margin="30,20,120,0"/>
+                                                 Margin="10,20,120,0"/>
                                         <Button HorizontalAlignment="Right"
                                                 Content="Comment"
                                                 x:Name="PostCommentButton"
@@ -826,7 +858,7 @@
                                                 Margin="0,20,30,0"/>
                                     </Grid>
                                     <ListView x:Name="CommentsListView"
-                                              Margin="0,10,0,0"
+                                              Margin="-15,10,0,0"
                                               IsItemClickEnabled="True"
                                               SelectionMode="None"
                                               ItemsSource="{x:Bind CommentSource}">

@@ -40,6 +40,7 @@ namespace Fluff
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        // Page Vars
         int SelectedIndex;
         ObservableCollection<DownloadQueueItem> DownloadQueueModel;
         Thread DownloadQueueThread;
@@ -67,6 +68,7 @@ namespace Fluff
             DownloadQueueModel = new ObservableCollection<DownloadQueueItem>();
             SelectedIndex = 0;
             host = new RequestHost(SettingsHandler.UserAgent);
+            CleanFutureAccessList();
             GetSettings();
             SetSettingsUI();
             //CheckForUpdate();
@@ -84,58 +86,19 @@ namespace Fluff
             Window.Current.Activated += Current_Activated;
         }
 
-        private async void Current_Activated(object sender, Windows.UI.Core.WindowActivatedEventArgs e)
+        private void CleanFutureAccessList()
         {
-            if (e.WindowActivationState != Windows.UI.Core.CoreWindowActivationState.Deactivated)
+            foreach (var item in Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.Entries)
             {
-                try
+                if (item.Token != "DownloadFolder")
                 {
-                    var content = Clipboard.GetContent();
-                    var txt = await content.GetTextAsync();
-                    if (txt == ClipboardText)
-                    {
-                        return;
-                    }
-                    ClipboardText = txt;
-                    if (CheckIfLink().Value != "NotLink")
-                    {
-                        OpenClipboardAsk.Begin();
-                    }
-
-                }
-                catch (Exception)
-                {
-
+                    Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.Remove(item.Token);
                 }
             }
         }
+              
 
-        private KeyValuePair<string, string> CheckIfLink()
-        {
-            if (ClipboardText.Contains("https://e621.net/posts/"))
-            {
-                string x = ClipboardText.Replace("https://e621.net/posts/", "");
-                if (x.Contains("?"))
-                {
-                    x = x.Remove(x.IndexOf('?'));
-                }
-                return new KeyValuePair<string, string>(x, "Post");
-            }
-
-            if (ClipboardText.Contains("https://e621.net/posts?"))
-            {
-                return new KeyValuePair<string, string>(ClipboardText.Replace("https://e621.net/posts?tags=", ""),"Search");
-            }
-
-            if (ClipboardText.Contains("https://e621.net/pools/"))
-            {
-                return new KeyValuePair<string, string>(ClipboardText.Replace("https://e621.net/pools/", ""),"Pool");
-            }
-
-            return new KeyValuePair<string, string>("NotLink","NotLink");
-        }
-
-        #region Settings Functions
+        // Settings Functions
         private void GetSettings()
         {
             Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
@@ -189,18 +152,36 @@ namespace Fluff
                 bool crashreport = (bool)localSettings.Values["crashreport"];
                 if (crashreport)
                 {
-                    //Crashes.NotifyUserConfirmation(UserConfirmation.AlwaysSend);
-                    //Crashes.SetEnabledAsync(true);
+                    Crashes.NotifyUserConfirmation(UserConfirmation.AlwaysSend);
+                    Crashes.SetEnabledAsync(true);
                 }
                 else
                 {
-                    //Crashes.NotifyUserConfirmation(UserConfirmation.DontSend);
-                    //Crashes.SetEnabledAsync(false);
+                    Crashes.NotifyUserConfirmation(UserConfirmation.DontSend);
+                    Crashes.SetEnabledAsync(false);
                 }
             }
             catch (Exception)
             {
                 localSettings.Values["crashreport"] = false;
+            }
+            try
+            {
+                SettingsHandler.DownloadQuality = (bool)localSettings.Values["downloadquality"];
+            }
+            catch (Exception)
+            {
+                SettingsHandler.DownloadQuality = true;
+                localSettings.Values["downloadquality"] = true;
+            }
+            try
+            {
+                SettingsHandler.AutoScrollTime = (int)localSettings.Values["AutoScrollTime"];
+            }
+            catch (Exception)
+            {
+                SettingsHandler.AutoScrollTime = 1000;
+                localSettings.Values["AutoScrollTime"] = 1000;
             }
         }
         private void SetSettings()
@@ -215,16 +196,27 @@ namespace Fluff
             localSettings.Values["volume"] = VolumeSwitch.IsOn;
             SettingsHandler.MuteVolume = VolumeSwitch.IsOn;
             localSettings.Values["crashreport"] = CrashSwitch.IsOn;
-            //Crashes.SetEnabledAsync(CrashSwitch.IsOn);
+            SettingsHandler.DownloadQuality = DownloadQuality.IsOn;
+            localSettings.Values["DownloadQuality"] = DownloadQuality.IsOn;
+            SettingsHandler.AutoScrollTime = (int)AutoScrollSlider.Value;
+            localSettings.Values["AutoScrollTime"] = (int)AutoScrollSlider.Value;
+            Crashes.SetEnabledAsync(CrashSwitch.IsOn);
         }
         private async void SetSettingsUI()
         {
+            if (Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.ContainsItem("DownloadFolder"))
+            {
+                var folder = await Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.GetFolderAsync("DownloadFolder");
+                CurrentFolderText.Text = folder.Name;
+            }
             RatingSelection.SelectedItem = SettingsHandler.Rating;
             PostCountSlider.Value = SettingsHandler.PostCount;
             CommentSwitch.IsOn = SettingsHandler.ShowComments;
             VolumeSwitch.IsOn = SettingsHandler.MuteVolume;
+            DownloadQuality.IsOn = SettingsHandler.DownloadQuality;
             Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             CrashSwitch.IsOn = (bool)localSettings.Values["crashreport"];
+            AutoScrollSlider.Value = SettingsHandler.AutoScrollTime;
             if (SettingsHandler.Username != "")
             {
                 var check = await host.TryAuthenticate(SettingsHandler.Username, SettingsHandler.ApiKey);
@@ -283,14 +275,14 @@ namespace Fluff
                 tags = BlacklistBox.Text;
             });
 
-            string[] splt = tags.Split("\n");
-            tags = "";
-
-            foreach (string str in splt)
-            {
-                tags += $"{str}\\n";
-            }
-            tags = tags.Substring(0, tags.Length - 2);
+            //string[] splt = tags.Split("\r");
+            //tags = "";
+            //
+            //foreach (string str in splt)
+            //{
+            //    tags += $"{str}\r";
+            //}
+            //tags = tags.Substring(0, tags.Length - 2);
 
             string id = CurrentUser.id.ToString();
 
@@ -352,9 +344,21 @@ namespace Fluff
             localSettings.Values["apikey"] = "";
             UsernameSet.Text = "";
         }
-        #endregion Settings Functions
+        private async void FolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            var folderPicker = new Windows.Storage.Pickers.FolderPicker();
+            folderPicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop;
+            folderPicker.FileTypeFilter.Add("*");
 
-        #region Topbar Functions
+            Windows.Storage.StorageFolder folder = await folderPicker.PickSingleFolderAsync();
+            if (folder != null)
+            {
+                CurrentFolderText.Text = folder.Name;
+                Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.AddOrReplace("DownloadFolder", folder);
+            }
+        }
+
+        // Topbar Functions
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -362,6 +366,7 @@ namespace Fluff
                 var MyFrame = contentFrame;
                 if (MyFrame.CanGoBack)
                 {
+                    var last = PagesStack.ArgsStack.Last();
                     PagesStack.ArgsStack.Remove(PagesStack.ArgsStack.Last());
                     MyFrame.GoBack(new DrillInNavigationTransitionInfo());
 
@@ -370,16 +375,62 @@ namespace Fluff
                     {
                         OpenPostsFull.Begin();
                         ClosePoolsFull.Begin();
+                        CloseSetsFull.Begin();
                         CloseWikiFull.Begin();
+                        CloseBlipsFull.Begin();
                         CloseUploadFull.Begin();
                     }
                     var poolpage = MyFrame.Content as PoolsSearch;
                     if(poolpage != null)
                     {
+                        if (last.ClickedPool != null)
+                        {
+                            ClosePostsFull.Begin();
+                            OpenPoolsFull.Begin();
+                            CloseSetsFull.Begin();
+                            CloseWikiFull.Begin();
+                            CloseBlipsFull.Begin();
+                            CloseUploadFull.Begin();
+                        }
+                        else
+                        {
+                            ClosePostsFull.Begin();
+                            ClosePoolsFull.Begin();
+                            OpenSetsFull.Begin();
+                            CloseWikiFull.Begin();
+                            CloseBlipsFull.Begin();
+                            CloseUploadFull.Begin();
+                        }
+                    }
+                    //var wikipage = MyFrame.Content as ;
+                    //if (wikipage != null)
+                    //{
+                    //    ClosePostsFull.Begin();
+                    //    ClosePoolsFull.Begin();
+                    //    CloseSetsFull.Begin();
+                    //    OpenWikiFull.Begin();
+                    //    CloseBlipsFull.Begin();
+                    //    CloseUploadFull.Begin();
+                    //}
+                    var blipspage = MyFrame.Content as BlipsPage;
+                    if (blipspage != null)
+                    {
                         ClosePostsFull.Begin();
-                        OpenPoolsFull.Begin();
+                        ClosePoolsFull.Begin();
+                        CloseSetsFull.Begin();
                         CloseWikiFull.Begin();
+                        OpenBlipsFull.Begin();
                         CloseUploadFull.Begin();
+                    }
+                    var uploadpage = MyFrame.Content as UploadPage;
+                    if (uploadpage != null)
+                    {
+                        ClosePostsFull.Begin();
+                        ClosePoolsFull.Begin();
+                        CloseSetsFull.Begin();
+                        CloseWikiFull.Begin();
+                        CloseBlipsFull.Begin();
+                        OpenUploadFull.Begin();
                     }
                 }
             }
@@ -392,7 +443,9 @@ namespace Fluff
         {
             OpenPostsFull.Begin();
             ClosePoolsFull.Begin();
+            CloseSetsFull.Begin();
             CloseWikiFull.Begin();
+            CloseBlipsFull.Begin();
             CloseUploadFull.Begin();
             PagesStack.ArgsStack.Add(new PostNavigationArgs()
             {
@@ -421,7 +474,9 @@ namespace Fluff
         {
             ClosePostsFull.Begin();
             OpenPoolsFull.Begin();
+            CloseSetsFull.Begin();
             CloseWikiFull.Begin();
+            CloseBlipsFull.Begin();
             CloseUploadFull.Begin();
             PagesStack.ArgsStack.Add(new PostNavigationArgs()
             {
@@ -446,11 +501,46 @@ namespace Fluff
                 ClosePoolsHalf.Begin();
             }
         }
+        private void SetsButton_Click(object sender, RoutedEventArgs e)
+        {
+            ClosePostsFull.Begin();
+            ClosePoolsFull.Begin();
+            OpenSetsFull.Begin();
+            CloseWikiFull.Begin();
+            CloseBlipsFull.Begin();
+            CloseUploadFull.Begin();
+            PagesStack.ArgsStack.Add(new PostNavigationArgs()
+            {
+                ClickedPost = null,
+                Page = 1,
+                PostsList = null,
+                PoolsList = null,
+                IsSetSearch = true,
+                Tags = ""
+            });
+            contentFrame.Navigate(typeof(PoolsSearch), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
+        }
+        private void SetsButton_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (SetsUnderline.ScaleX != 1)
+            {
+                OpenSetsHalf.Begin();
+            }
+        }
+        private void SetsButton_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (SetsUnderline.ScaleX != 1)
+            {
+                CloseSetsHalf.Begin();
+            }
+        }
         private void WikiButton_Click(object sender, RoutedEventArgs e)
         {
             ClosePostsFull.Begin();
             ClosePoolsFull.Begin();
+            CloseSetsFull.Begin();
             OpenWikiFull.Begin();
+            CloseBlipsFull.Begin();
             CloseUploadFull.Begin();
         }
         private void WikiButton_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -467,11 +557,47 @@ namespace Fluff
                 CloseWikiHalf.Begin();
             }
         }
+        private void BlipsButton_Click(object sender, RoutedEventArgs e)
+        {
+            ClosePostsFull.Begin();
+            ClosePoolsFull.Begin();
+            CloseSetsFull.Begin();
+            CloseWikiFull.Begin();
+            OpenBlipsFull.Begin();
+            CloseUploadFull.Begin();
+            PagesStack.ArgsStack.Add(new PostNavigationArgs()
+            {
+                ClickedPost = null,
+                Page = 1,
+                PostsList = null,
+                PoolsList = null,
+                IsSetSearch = true,
+                Tags = ""
+            });
+            contentFrame.Navigate(typeof(BlipsPage), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
+
+        }
+        private void BlipsButton_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (BlipsUnderline.ScaleX != 1)
+            {
+                OpenBlipsHalf.Begin();
+            }
+        }
+        private void BlipsButton_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (BlipsUnderline.ScaleX != 1)
+            {
+                CloseBlipsHalf.Begin();
+            }
+        }
         private void UploadButton_Click(object sender, RoutedEventArgs e)
         {
             ClosePostsFull.Begin();
             ClosePoolsFull.Begin();
+            CloseSetsFull.Begin();
             CloseWikiFull.Begin();
+            CloseBlipsFull.Begin();
             OpenUploadFull.Begin();
             PagesStack.ArgsStack.Add(new PostNavigationArgs()
             {
@@ -504,9 +630,8 @@ namespace Fluff
         {
             SettingsDialog.ShowAsync();
         }
-        #endregion Topbar Functions
 
-        #region Crosspage Helpers
+        // Crosspage Helpers
         public async void ShowSystemMessage(string message)
         {
             if (SysMessIsOpen)
@@ -540,9 +665,8 @@ namespace Fluff
                 DownloadQueueThread.Start();
             }
         }
-        #endregion Crosspage Helpers
 
-        #region Image Saving
+        // Image Saving
         private async void DownloadThread()
         {
             while(DownloadQueueModel.Count > 0)
@@ -611,7 +735,15 @@ namespace Fluff
                     CookieUsageBehavior = Windows.Web.Http.Filters.HttpCookieUsageBehavior.Default
                 };
                 HttpClient client = new HttpClient(filter); // Create HttpClient
-                Uri requestUri = new Uri(PostToSave.PostToDownload.file.url);
+                Uri requestUri = null;
+                if (SettingsHandler.DownloadQuality)
+                {
+                    requestUri = new Uri(PostToSave.PostToDownload.file.url);
+                }
+                else
+                {
+                    requestUri = new Uri(PostToSave.PostToDownload.sample.url);
+                }
                 HttpResponseMessage httpResponse = new HttpResponseMessage();
                 string httpResponseBody = "";
 
@@ -647,6 +779,12 @@ namespace Fluff
                 StorageFile file = null;
                 try
                 {
+                    bool isDownloads = true;
+                    bool isSubFolder = true;
+                    if (Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.ContainsItem("DownloadFolder"))
+                    {
+                        isDownloads = false;
+                    }
                     if (PostToSave.FolderName != "")
                     {
                         string foldername = PostToSave.FolderName;
@@ -660,11 +798,52 @@ namespace Fluff
                         foldername = foldername.Replace("?", "");
                         foldername = foldername.Replace("*", "");
                         foldername = foldername.Replace("_", " ");
-                        file = await DownloadsFolder.CreateFileAsync($"{foldername}_{PostToSave.FileName}.{PostToSave.PostToDownload.file.ext}");
+                        if (Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.ContainsItem(foldername))
+                        {
+                            isSubFolder = false;
+                        }
+                        if(!isSubFolder)
+                        {
+                            var subfolder = await Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.GetFolderAsync(foldername);
+                            if (subfolder.Name == foldername)
+                            {
+                                file = await subfolder.CreateFileAsync($"{foldername}_{PostToSave.FileName}.{PostToSave.PostToDownload.file.ext}");
+                            }
+                            else
+                            {
+                                subfolder = await DownloadsFolder.CreateFolderAsync(foldername);
+                                Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.AddOrReplace(foldername, subfolder);
+                                file = await subfolder.CreateFileAsync($"{foldername}_{PostToSave.FileName}.{PostToSave.PostToDownload.file.ext}");
+                            }
+                        }
+                        else
+                        {
+                            StorageFolder subfolder = null;
+                            if (!isDownloads)
+                            {
+                                var folder = await Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.GetFolderAsync("DownloadFolder");
+                                subfolder = await folder.CreateFolderAsync(foldername);
+                            }
+                            else
+                            {
+                                subfolder = await DownloadsFolder.CreateFolderAsync(foldername);
+                            }
+                            Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.AddOrReplace(foldername, subfolder);
+                            file = await subfolder.CreateFileAsync($"{foldername}_{PostToSave.FileName}.{PostToSave.PostToDownload.file.ext}");
+
+                        }
                     }
                     else
                     {
-                        file = await DownloadsFolder.CreateFileAsync(PostToSave.FileName + "." + PostToSave.PostToDownload.file.ext);
+                        if (!isDownloads)
+                        {
+                            var folder = await Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.GetFolderAsync("DownloadFolder");
+                            file = await folder.CreateFileAsync(PostToSave.FileName + "." + PostToSave.PostToDownload.file.ext);
+                        }
+                        else 
+                        {
+                            file = await DownloadsFolder.CreateFileAsync(PostToSave.FileName + "." + PostToSave.PostToDownload.file.ext);
+                        }
                     }
                 }
                 catch (Exception)
@@ -778,9 +957,8 @@ namespace Fluff
                 });
             }
         }
-        #endregion Image Saving
 
-        
+        // Likes and Favs hashtables
         private async void LoadFavsFromFile()
         {
             try
@@ -805,7 +983,6 @@ namespace Fluff
 
             }
         }
-
         private async void GetLikedPosts()
         {
             LoadVotesFromFile();
@@ -866,7 +1043,6 @@ namespace Fluff
             SaveVotesToFile();
             //ShowSystemMessage("Voted index complete");
         }
-
         private async void SaveVotesToFile()
         {
             using (var memoryStream = new MemoryStream())
@@ -884,7 +1060,6 @@ namespace Fluff
             }
 
         }
-
         private async void LoadVotesFromFile()
         {
             try
@@ -909,47 +1084,7 @@ namespace Fluff
             }
         }
 
-        // Unused update checker for github updates
-        //private async void CheckForUpdate()
-        //{
-        //    var github = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("Fluff"));
-        //    var releases = await github.Repository.Release.GetAll("EpsiRho", "Fluff");
-        //    if(releases.Count == 0)
-        //    {
-        //        return;
-        //    }
-
-        //    var latest = releases[0];
-
-        //    try
-        //    {
-        //        double latestNum = Convert.ToDouble(latest.TagName);
-
-        //        if (latestNum > 0.5)
-        //        {
-        //            UpdateTitle.Text = latest.Name;
-        //            UpdateDescription.Text = latest.Body;
-        //            UpdateDialog.ShowAsync();
-        //        }
-        //    }
-        //    catch(Exception)
-        //    {
-        //        ShowSystemMessage("Couldn't Check for Update");
-        //    }
-        //}
-        private async void AskForPermsDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
-        {
-            //Crashes.NotifyUserConfirmation(UserConfirmation.AlwaysSend);
-            //Crashes.SetEnabledAsync(true);
-            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values["crashreport"] = true;
-        }
-
-        private void CancelOpenLink_Click(object sender, RoutedEventArgs e)
-        {
-            CloseClipboardAsk.Begin();
-        }
-
+        // Clipboard and Link opening
         private async void OpenLinkButton_Click(object sender, RoutedEventArgs e)
         {
             CloseClipboardAsk.Begin();
@@ -994,15 +1129,62 @@ namespace Fluff
                 contentFrame.Navigate(typeof(PoolViewPage), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
             }
         }
-
-        private void AskForPermsDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        private void CancelOpenLink_Click(object sender, RoutedEventArgs e)
         {
-            //Crashes.NotifyUserConfirmation(UserConfirmation.DontSend);
-            //.SetEnabledAsync(false);
-            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values["crashreport"] = false;
+            CloseClipboardAsk.Begin();
+        }
+        private KeyValuePair<string, string> CheckIfLink()
+        {
+            if (ClipboardText.Contains("https://e621.net/posts/"))
+            {
+                string x = ClipboardText.Replace("https://e621.net/posts/", "");
+                if (x.Contains("?"))
+                {
+                    x = x.Remove(x.IndexOf('?'));
+                }
+                return new KeyValuePair<string, string>(x, "Post");
+            }
+
+            if (ClipboardText.Contains("https://e621.net/posts?"))
+            {
+                return new KeyValuePair<string, string>(ClipboardText.Replace("https://e621.net/posts?tags=", ""), "Search");
+            }
+
+            if (ClipboardText.Contains("https://e621.net/pools/"))
+            {
+                return new KeyValuePair<string, string>(ClipboardText.Replace("https://e621.net/pools/", ""), "Pool");
+            }
+
+            return new KeyValuePair<string, string>("NotLink", "NotLink");
+        }
+        private async void Current_Activated(object sender, Windows.UI.Core.WindowActivatedEventArgs e)
+        {
+            if (e.WindowActivationState != Windows.UI.Core.CoreWindowActivationState.Deactivated)
+            {
+                try
+                {
+                    var content = Clipboard.GetContent();
+                    var txt = await content.GetTextAsync();
+                    if (txt == ClipboardText)
+                    {
+                        return;
+                    }
+                    ClipboardText = txt;
+                    if (CheckIfLink().Value != "NotLink")
+                    {
+                        OpenClipboardAsk.Begin();
+                    }
+
+                }
+                catch (Exception)
+                {
+
+                }
+            }
         }
 
+
+        // Crash Report Dialog
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             if (!await Crashes.IsEnabledAsync())
@@ -1010,5 +1192,21 @@ namespace Fluff
                 AskForPermsDialog.ShowAsync();
             }
         }
+        private void AskForPermsDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            Crashes.NotifyUserConfirmation(UserConfirmation.AlwaysSend);
+            Crashes.SetEnabledAsync(true);
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values["crashreport"] = true;
+        }
+        private void AskForPermsDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            Crashes.NotifyUserConfirmation(UserConfirmation.DontSend);
+            Crashes.SetEnabledAsync(false);
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values["crashreport"] = false;
+        }
+
+        
     }
 }

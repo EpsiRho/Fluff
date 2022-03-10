@@ -17,14 +17,16 @@ namespace Fluff.Classes
     /// </summary>
     public static class SettingsHandler
     {
-        public static string UserAgent = "Fluff/0.7 (by EpsilonRho)";
+        public static string UserAgent = "Fluff/0.9 (by EpsilonRho)";
         public static string Username { get; set; }
         public static string ApiKey { get; set; }
         public static string Rating { get; set; }
         public static bool ShowComments { get; set; }
         public static bool MuteVolume { get; set; }
-        public static bool EnableUpload { get; set; }
+        public static bool DownloadQuality { get; set; }
         public static double PostCount { get; set; }
+        public static int AutoScrollTime { get; set; }
+
         public static Dictionary<int, bool> VotedPosts { get; set; }
         public static ObservableCollection<string> FavoriteTags { get; set; }
         public static async void SaveFavsToFile()

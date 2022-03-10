@@ -92,6 +92,56 @@
                              To="0"/>
         </Storyboard>
 
+        <Storyboard x:Name="OpenSetsHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="SetsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0.5" From="0"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseSetsHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="SetsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="OpenSetsFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="SetsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="1" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseSetsFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="SetsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0"/>
+        </Storyboard>
+
+        <Storyboard x:Name="OpenBlipsHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="BlipsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0.5" From="0"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseBlipsHalf">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="BlipsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="OpenBlipsFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="BlipsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="1" From="0.5"/>
+        </Storyboard>
+        <Storyboard x:Name="CloseBlipsFull">
+            <DoubleAnimation Duration="0:0:0.1"
+                             Storyboard.TargetName="BlipsUnderline"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="0"/>
+        </Storyboard>
+
         <Storyboard x:Name="OpenUploadHalf">
             <DoubleAnimation Duration="0:0:0.1"
                              Storyboard.TargetName="UploadUnderline"
@@ -206,12 +256,28 @@
                               PointerExited="PoolsButton_PointerExited"/>
                 <AppBarButton Icon="View" 
                               Label="Sets"
+                              IsEnabled="True"
+                              x:Name="SetsButton"
+                              Canvas.ZIndex="1"
+                              Click="SetsButton_Click"
+                              PointerEntered="SetsButton_PointerEntered"
+                              PointerExited="SetsButton_PointerExited"/>
+                <AppBarButton Icon="ShowResults" 
+                              Label="Wiki"
                               IsEnabled="False"
                               x:Name="WikiButton"
                               Canvas.ZIndex="1"
                               Click="WikiButton_Click"
                               PointerEntered="WikiButton_PointerEntered"
                               PointerExited="WikiButton_PointerExited"/>
+                <AppBarButton Icon="Comment" 
+                              Label="Blips"
+                              IsEnabled="True"
+                              x:Name="BlipsButton"
+                              Canvas.ZIndex="1"
+                              Click="BlipsButton_Click"
+                              PointerEntered="BlipsButton_PointerEntered"
+                              PointerExited="BlipsButton_PointerExited"/>
                 <AppBarButton Icon="Upload" 
                               Label="Upload"
                               IsEnabled="True"
@@ -233,7 +299,7 @@
                        HorizontalAlignment="Left"
                        VerticalAlignment="Bottom">
                 <Rectangle.RenderTransform>
-                    <ScaleTransform ScaleX="1" x:Name="PostUnderline"/>
+                    <ScaleTransform ScaleX="0" x:Name="PostUnderline"/>
                 </Rectangle.RenderTransform>
             </Rectangle>
             <Rectangle Fill="#6be9ff"
@@ -261,15 +327,43 @@
                        HorizontalAlignment="Left"
                        VerticalAlignment="Bottom">
                 <Rectangle.RenderTransform>
+                    <ScaleTransform ScaleX="0" x:Name="SetsUnderline"/>
+                </Rectangle.RenderTransform>
+            </Rectangle>
+            <Rectangle Fill="#6be9ff"
+                       Width="52"
+                       RadiusX="2"
+                       Canvas.ZIndex="0"
+                       RadiusY="2"
+                       Margin="280,0,0,10"
+                       Height="3"
+                       RenderTransformOrigin="0.5,0.5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom">
+                <Rectangle.RenderTransform>
                     <ScaleTransform ScaleX="0" x:Name="WikiUnderline"/>
                 </Rectangle.RenderTransform>
             </Rectangle>
             <Rectangle Fill="#6be9ff"
-                       Width="65"
+                       Width="54"
                        RadiusX="2"
                        Canvas.ZIndex="0"
                        RadiusY="2"
-                       Margin="285,0,0,10"
+                       Margin="352,0,0,10"
+                       Height="3"
+                       RenderTransformOrigin="0.5,0.5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom">
+                <Rectangle.RenderTransform>
+                    <ScaleTransform ScaleX="0" x:Name="BlipsUnderline"/>
+                </Rectangle.RenderTransform>
+            </Rectangle>
+            <Rectangle Fill="#6be9ff"
+                       Width="67"
+                       RadiusX="2"
+                       Canvas.ZIndex="0"
+                       RadiusY="2"
+                       Margin="428,0,0,10"
                        Height="3"
                        RenderTransformOrigin="0.5,0.5"
                        HorizontalAlignment="Left"
@@ -327,12 +421,12 @@
                        DefaultButton="Primary"
                        PrimaryButtonClick="SettingsDialog_PrimaryButtonClick"
                        SecondaryButtonText="Close">
-            <Grid  MinWidth="400">
+            <Grid  MinWidth="500">
                 <TextBlock Text="{x:Bind classes:SettingsHandler.UserAgent}"
                            HorizontalAlignment="Left"
-                           Margin="1,-15,0,0"
+                           Margin="1,-5,0,0"
                            VerticalAlignment="Top"/>
-                <ScrollViewer Margin="0,10,0,0">
+                <ScrollViewer Margin="0,15,0,0">
                     <StackPanel>
                         <muxc:Expander HorizontalAlignment="Stretch">
                             <muxc:Expander.Header>
@@ -345,14 +439,28 @@
                                     <x:String>safe</x:String>
                                     <x:String>explicit</x:String>
                                 </ComboBox>
-                                <TextBlock Text="Post Count" Margin="10,0,10,0" FontSize="16"/>
+                                <TextBlock Text="Post Count" Margin="10,5,10,0" FontSize="16"/>
                                 <Slider x:Name="PostCountSlider" Margin="10,0,10,0" Maximum="300" Minimum="25" StepFrequency="5" Value="75" Width="200" HorizontalAlignment="Left"/>
+                                <TextBlock Text="Time between auto scrolling posts" Margin="10,5,10,0" FontSize="16"/>
+                                <Slider x:Name="AutoScrollSlider" Margin="10,0,10,0" Maximum="60000" Minimum="100" StepFrequency="500" Value="1000" Width="200" HorizontalAlignment="Left"/>
                                 <TextBlock Text="Show Comments" Margin="10,0,10,0" FontSize="16"/>
                                 <ToggleSwitch x:Name="CommentSwitch" Margin="10,0,0,0"/>
                                 <TextBlock Text="Mute Videos By Default" Margin="10,0,10,0" FontSize="16"/>
                                 <ToggleSwitch x:Name="VolumeSwitch" Margin="10,0,0,0"/>
                                 <TextBlock Text="Enable Crash Reports" Margin="10,0,10,0" FontSize="16"/>
                                 <ToggleSwitch x:Name="CrashSwitch" Margin="10,0,0,0"/>
+                            </StackPanel>
+                        </muxc:Expander>
+                        <muxc:Expander HorizontalAlignment="Stretch">
+                            <muxc:Expander.Header>
+                                <TextBlock Text="Download Settings" FontSize="18"/>
+                            </muxc:Expander.Header>
+                            <StackPanel HorizontalAlignment="Left" Width="350">
+                                <TextBlock Text="Download folder" Margin="10,0,10,0" FontSize="16"/>
+                                <TextBlock Margin="10,0,10,0" FontSize="16" TextTrimming="CharacterEllipsis">Current Folder: <Run x:Name="CurrentFolderText"></Run></TextBlock>
+                                <Button Content="Choose Folder" Margin="10,0,10,0" x:Name="FolderButton" Click="FolderButton_Click"/>
+                                <TextBlock Text="Download Full Quality" Margin="10,0,10,0" FontSize="16"/>
+                                <ToggleSwitch x:Name="DownloadQuality" IsOn="True" Margin="10,0,0,0"/>
                             </StackPanel>
                         </muxc:Expander>
                         <muxc:Expander HorizontalAlignment="Stretch">

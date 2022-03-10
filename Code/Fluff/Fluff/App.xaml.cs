@@ -33,7 +33,8 @@ namespace Fluff
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
-            //AppCenter.Start("<apikey>", typeof(Analytics), typeof(Crashes));
+            //AppCenter.Start("", typeof(Analytics), typeof(Crashes));
+            //CrashCheck();
         }
 
         private async void CrashCheck()
@@ -69,7 +70,7 @@ namespace Fluff
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
-                    //TODO: Load state from previously suspended application
+
                 }
 
                 // Place the frame in the current Window
@@ -110,7 +111,7 @@ namespace Fluff
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
-            //TODO: Save application state and stop any background activity
+
             deferral.Complete();
         }
     }

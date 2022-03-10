@@ -1,4 +1,5 @@
-﻿using System;
+﻿using e6API;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,8 +10,12 @@ namespace Fluff.Classes
 {
     public static class DTextConverter
     {
-        public static string ToMarkdown(string dtext)
+        public static async Task<string> ToMarkdown(string dtext)
         {
+            RequestHost host = new RequestHost(SettingsHandler.UserAgent);
+            dtext = dtext.Replace("\r", "");
+            dtext = dtext.Replace("\n", "\n\n");
+
             // Replace Bold Tags
             dtext = dtext.Replace("[b]", "**");
             dtext = dtext.Replace("[/b]", "**");
@@ -29,9 +34,9 @@ namespace Fluff.Classes
 
             // Subscript / Superscript broken
 
-            // Username
+            // TODO Username
 
-            // Spoiler
+            // TODO Spoiler
 
             // Code Block
             dtext = dtext.Replace("[code]", "```");
@@ -41,14 +46,66 @@ namespace Fluff.Classes
             // Color
 
             // Quotes
-            dtext = dtext.Replace("[quote]", ">").Replace("[/quote]", "");
+            dtext = dtext.Replace("[quote]", "> ").Replace("[/quote]", "");
 
             // Links
-            dtext = dtext.Replace("\":", "](").Replace("\"", "[").Replace(" said:", ") said:");
+            Regex rgx = new Regex("(\":((?! )(?!\").)*\\/*)",
+             RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+            var rgmatches = rgx.Matches(dtext);
+            foreach (var match in rgmatches)
+            {
+                string BlowMe = match.ToString();
+                var fix = BlowMe.Replace("\":", "](");
+                fix += ")";
+                dtext = dtext.Replace(BlowMe, fix);
+            }
+            dtext = dtext.Replace(") said:", ") said:").Replace("\"", "[");
 
             // Post Thumbnails
+            //try
+            //{
+            //    bool fuck = true;
+            //    while (fuck)
+            //    {
+            //        fuck = dtext.Contains("thumb #");
+            //        if (fuck)
+            //        {
+            //            var str = dtext.Substring(dtext.IndexOf("thumb #"));
+            //            var shit = str.Substring(7);
+            //            int idx = 0;
+            //            foreach (char c in shit)
+            //            {
+            //                if (Char.IsDigit(c))
+            //                {
+            //                    idx++;
+            //                }
+            //                else
+            //                {
+            //                    idx++;
+            //                    break;
+            //                }
+            //            }
 
-            // Block formatting
+            //            if (idx != 0)
+            //            {
+            //                str = str.Substring(0, idx + 7);
+            //                var id = shit.Substring(0, idx);
+            //                var post = await host.GetPosts($"id:{id}");
+
+            //                dtext = dtext.Replace(str, $"![]({post[0].preview.url})");
+            //                dtext = dtext.Replace(str, $"![]({post[0].preview.url})");
+            //            }
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+
+            //}
+
+
+            // TODO Block formatting
 
             // Headers
             dtext = dtext.Replace("h1.", "#");
@@ -77,7 +134,7 @@ namespace Fluff.Classes
             }
 
 
-            // Tables will be a problem
+            // Tables might be the same
 
             return dtext;
         }

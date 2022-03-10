@@ -29,7 +29,7 @@ namespace Fluff.Pages
     /// </summary>
     public sealed partial class PostsSearch : Page
     {
-        #region Global Page Vars
+        // Global Page Vars
         // The collection of posts bound to the gridview
         ObservableCollection<Post> PostsViewModel;
         ObservableCollection<Tag> TagsViewModel;
@@ -47,10 +47,10 @@ namespace Fluff.Pages
         string TagToSearch;
         // If tags can be searched for
         bool CanGetTags;
+        Post RightTappedPost;
         PostNavigationArgs args;
-        #endregion Global Page Vars
 
-        #region Page Loading Functions
+        // Page Loading Functions
         public PostsSearch()
         {
             this.InitializeComponent();
@@ -63,24 +63,36 @@ namespace Fluff.Pages
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            args = PagesStack.ArgsStack[(int)e.Parameter];
-            SearchBox.Text = args.Tags;
-            PageText.Text = args.Page.ToString();
-            if (args.PostsList == null)
+            try
             {
-                StartSearch();
+                args = PagesStack.ArgsStack[(int) e.Parameter];
+                SearchBox.Text = args.Tags;
+                PageText.Text = args.Page.ToString();
+                if (args.IsPopDay)
+                {
+                    PopDayButton.IsChecked = true;
+                }
+                else if (args.IsPopWeek)
+                {
+                    PopWeekButton.IsChecked = true;
+                }
+                else if (args.IsPopMonth)
+                {
+                    PopMonthButton.IsChecked = true;
+                }
+
+                if (args.PostsList != null)
+                {
+                    SortSelection.SelectedIndex = args.SortOrder;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                PostsViewModel = new ObservableCollection<Post>(args.PostsList);
-                SortSelection.SelectedIndex = args.SortOrder;
+
             }
         }
 
-
-        #endregion Page Loading Functions
-
-        #region Post Grid Interactions
+        // Post Grid Interactions
         private void PostsView_ItemClick(object sender, ItemClickEventArgs e)
         {
             // Get the post and setup the post nav args. this will need to change eventually
@@ -93,8 +105,15 @@ namespace Fluff.Pages
             args.PostsList = new ObservableCollection<Post>(PostsViewModel);
             args.ClickedPost = p;
             args.SortOrder = SortSelection.SelectedIndex;
+            args.IsPopDay = PopDayButton.IsChecked.Value;
+            args.IsPopWeek = PopWeekButton.IsChecked.Value;
+            args.IsPopMonth = PopMonthButton.IsChecked.Value;
+            args.ScrollPercent = PostsScrollView.VerticalOffset;
             NewArgs.PostsList = new ObservableCollection<Post>(PostsViewModel);
             PagesStack.ArgsStack.Add(NewArgs);
+            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", (UIElement)PostsView.ContainerFromItem(p));
+            animation.Configuration = new BasicConnectedAnimationConfiguration();
+
 
             // Start navigation
             this.Frame.Navigate(typeof(SinglePostView), PagesStack.ArgsStack.Count() - 1, new DrillInNavigationTransitionInfo());
@@ -111,9 +130,85 @@ namespace Fluff.Pages
             Storyboard sb = ((GridViewItem)sender).Resources["HideImageBar"] as Storyboard;
             sb.Begin();
         }
-        #endregion Post Grid Interactions
+        private void PostsView_Loaded(object sender, RoutedEventArgs e)
+        {
+            Thread t = new Thread(ScrollThread);
+            t.Start();
+        }
 
-        #region Thread Run Functions
+        private async void ScrollThread()
+        {
+            if (args.PostsList == null)
+            {
+                StartSearch();
+            }
+            else
+            {
+                foreach (var post in args.PostsList)
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.High, () =>
+                    {
+                        PostsViewModel.Add(post);
+                    });
+                }
+
+                bool check = false;
+                while (!check)
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+                    {
+                        check = PostsScrollView.ChangeView(0, args.ScrollPercent, 1);
+                    });
+                }
+            }
+        }
+
+        private void PostsView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            RightTappedPost = (sender as GridViewItem).DataContext as Post;
+
+            if (RightTappedPost != null)
+            {
+                MenuFlyout flyout = new MenuFlyout();
+                MenuFlyoutItem item1 = new MenuFlyoutItem();
+                item1.Text = "Like Post";
+                item1.Click += LikeTapped;
+                flyout.Items.Add(item1);
+                MenuFlyoutItem item2 = new MenuFlyoutItem();
+                item2.Text = "Dislike Post";
+                item2.Click += DislikeTapped;
+                flyout.Items.Add(item2);
+                MenuFlyoutItem item3 = new MenuFlyoutItem();
+                item3.Text = "Favorite Post";
+                item3.Click += FavTapped;
+                flyout.Items.Add(item3);
+                MenuFlyoutItem item4 = new MenuFlyoutItem();
+                item4.Text = "Download Post";
+                item4.Click += DownloadTapped;
+                flyout.Items.Add(item4);
+                flyout.ShowAt(PostsView, e.GetPosition(PostsView));
+            }
+        }
+        private void LikeTapped(object sender, RoutedEventArgs e)
+        {
+            host.VotePost(RightTappedPost.id, 1);
+        }
+        private void DislikeTapped(object sender, RoutedEventArgs e)
+        {
+            host.VotePost(RightTappedPost.id, -1);
+        }
+        private void FavTapped(object sender, RoutedEventArgs e)
+        {
+            host.FavoritePost(RightTappedPost.id);
+        }
+        private void DownloadTapped(object sender, RoutedEventArgs e)
+        {
+            var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+            var page = (MainPage)grid.Parent;
+            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = RightTappedPost, FileName = RightTappedPost.file.md5, FolderName = "" });
+        }
+
+        // Thread Run Functions
         public async void GetPosts(object CurList)
         {
             // Convert the args from object to usable args.
@@ -157,6 +252,30 @@ namespace Fluff.Pages
                     break;
             }
 
+            // Get Modifiers from combobox
+            string minScore = "";
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                minScore = MinScoreBox.Text;
+            });
+            if (minScore != "")
+            {
+                tags += $" score:>{minScore}";
+            }
+
+            // Get blacklist
+            host.Username = SettingsHandler.Username;
+            host.ApiKey = SettingsHandler.ApiKey;
+            var users = await host.SearchUsers(SettingsHandler.Username, 1);
+            string[] blacklist = users[0].blacklisted_tags.Replace("\r", "").Split("\n");
+            if (blacklist != null)
+            {
+                foreach (string tag in blacklist)
+                {
+                    tags += $" -{tag}";
+                }
+            }
+
             // Get Post Count from slider
             int count = (int)SettingsHandler.PostCount;
 
@@ -168,7 +287,33 @@ namespace Fluff.Pages
             }
 
             // Get Posts
-            var posts = await host.GetPosts(tags, count, args.Page);
+            List<Post> posts = null;
+            bool Day = false;
+            bool Week = false;
+            bool Month = false;
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                Day = PopDayButton.IsChecked.Value;
+                Week = PopWeekButton.IsChecked.Value;
+                Month = PopMonthButton.IsChecked.Value;
+            });
+            if (Day)
+            {
+                posts = await host.GetPopularPosts(PopularPosts.Day, count, args.Page);
+            }
+            else if (Week)
+            {
+                posts = await host.GetPopularPosts(PopularPosts.Week, count, args.Page);
+            }
+            else if (Month)
+            {
+                posts = await host.GetPopularPosts(PopularPosts.Month, count, args.Page);
+            }
+            else
+            {
+                posts = await host.GetPosts(tags, count, args.Page);
+            }
+
             if (posts == null)
             {
                 return;
@@ -223,12 +368,17 @@ namespace Fluff.Pages
                 SearchButtonPanel.Visibility = Visibility.Visible;
                 SearchButton.IsEnabled = true;
                 LeftNav.IsEnabled = true;
+                if (!PopDayButton.IsChecked.Value && !PopMonthButton.IsChecked.Value && !PopWeekButton.IsChecked.Value)
+                {
+                    SearchBox.IsEnabled = true;
+                }
+
                 SortSelection.IsEnabled = true;
                 RightNav.IsEnabled = true;
-                SearchTagAutoComplete.Items.Clear();
             });
             CanSearch = true;
         }
+
         private void TimerThread()
         {
             while (timeTillSearch > 0)
@@ -273,190 +423,6 @@ namespace Fluff.Pages
             sender.Text = sender.Text.Replace(split[split.Length - 1], "");
             sender.Text += ((Tag)args.SelectedItem).name;
         }
-
-        private void SearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
-        {
-            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
-            {
-                timeTillSearch = 0.3;
-                if(TagsThread == null)
-                {
-                    TagsThread = new Thread(TimerThread);
-                    TagsThread.Start();
-                }
-                string[] split = sender.Text.Split(' ');
-                TagToSearch = split[split.Length - 1];
-            }
-        }
-        #endregion
-
-        #region Left Bar Interactions
-        private void SearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            if (e.Key == Windows.System.VirtualKey.Enter)
-            {
-                SearchTagAutoComplete.Items.Clear();
-                args.Page = 1;
-                StartSearch();
-            }
-        }
-        private void SearchButton_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            if (!CanSearch)
-            {
-                return;
-            }
-            args.Page = 1;
-            SearchBox.Text += " ";
-            SearchTagAutoComplete.Items.Clear();
-            StartSearch();
-        }
-        private void SortSelection_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (!CanSearch)
-            {
-                return;
-            }
-            args.Page = 1;
-            StartSearch();
-        }
-        private void DownloadMultiple_Click(object sender, RoutedEventArgs e)
-        {
-            if (DownloadMultiple.IsChecked.Value)
-            {
-                PostsView.IsItemClickEnabled = false;
-                PostsView.SelectionMode = ListViewSelectionMode.Multiple;
-
-            }
-            else
-            {
-                var list = new List<object>(PostsView.SelectedItems);
-                PostsView.IsItemClickEnabled = true;
-                PostsView.SelectionMode = ListViewSelectionMode.None;
-
-                foreach (var item in list)
-                {
-                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
-                    var page = (MainPage)grid.Parent;
-                    page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = item as Post, FileName = (item as Post).file.md5, FolderName = "" });
-                }
-            }
-
-        }
-        private void LeftNav_Click(object sender, RoutedEventArgs e)
-        {
-            if (!CanSearch)
-            {
-                return;
-            }
-            if (args.Page > 1)
-            {
-                args.Page--;
-                StartSearch();
-            }
-        }
-        private void RightNav_Click(object sender, RoutedEventArgs e)
-        {
-            args.Page++;
-            StartSearch();
-        }
-        #endregion Left Bar Interactions
-
-        #region Helper & Common Code Functions
-        public void StartSearch()
-        {
-            if (!CanSearch)
-            {
-                return;
-            }
-            SearchBox.IsEnabled = true;
-            SearchButtonPanel.Visibility = Visibility.Collapsed;
-            SearchProgress.Visibility = Visibility.Visible;
-            SearchButton.IsEnabled = false;
-            SortSelection.IsEnabled = false;
-            LeftNav.IsEnabled = false;
-            RightNav.IsEnabled = false;
-            PageText.Text = args.Page.ToString();
-            Thread t = new Thread(GetPosts);
-            t.Start(new ObservableCollection<Post>(PostsViewModel));
-            PostsViewModel.Clear();
-        }
-
-        #endregion Helper & Common Code Functions
-
-        #region Touch Interactions
-        private void PostsView_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
-        {
-            if (e.IsInertial && !_isGridSwiped)
-            {
-                var swipedDistance = e.Cumulative.Translation.X;
-
-                if (Math.Abs(swipedDistance) <= 200) return;
-
-                if (swipedDistance < 0)
-                {
-                    try
-                    {
-                        if (PostsViewModel.Count > 0)
-                        {
-                            args.Page++;
-                            StartSearch();
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        if (args.Page != 1)
-                        {
-                            args.Page--;
-                            StartSearch();
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
-                _isGridSwiped = true;
-            }
-        }
-        private void PostsView_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
-        {
-            _isGridSwiped = false;
-        }
-        #endregion
-
-        private void RecommendButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (SettingsHandler.Username == "")
-            {
-                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
-                var page = (MainPage)grid.Parent;
-                page.ShowSystemMessage("You need to be logged in to use this feature");
-                return;
-            }
-
-            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var str = (string)localSettings.Values["SeenRecommendInfo"];
-            if (str == null)
-            {
-                localSettings.Values["SeenRecommendInfo"] = "Seen";
-                RecommendedPanel.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                Thread t = new Thread(GetRecommended);
-                t.Start();
-
-            }
-        }
-
         private async void GetRecommended()
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -464,7 +430,6 @@ namespace Fluff.Pages
                 SearchBox.IsEnabled = false;
                 SearchButtonPanel.Visibility = Visibility.Collapsed;
                 SearchProgress.Visibility = Visibility.Visible;
-                SearchTagAutoComplete.Items.Clear();
                 SearchButton.IsEnabled = false;
                 SortSelection.IsEnabled = false;
                 LeftNav.IsEnabled = false;
@@ -545,31 +510,132 @@ namespace Fluff.Pages
                 tags += $"~{FinalList[idx].Key} ";
             }
 
-            tags += "order:random";
+            tags += "order:random score:>150";
 
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 SearchBox.Text = tags;
                 args.Tags = tags;
                 PageText.Text = "R";
-                SearchTagAutoComplete.Items.Clear();
                 PostsViewModel.Clear();
                 StartSearch();
             });
         }
-
-        private void RecommendPanelOkay_Click(object sender, RoutedEventArgs e)
+        
+        // Left Panel Interactions
+        private void SearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
-            RecommendedPanel.Visibility = Visibility.Collapsed;
+            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+            {
+                timeTillSearch = 0.3;
+                if(TagsThread == null)
+                {
+                    TagsThread = new Thread(TimerThread);
+                    TagsThread.Start();
+                }
+                string[] split = sender.Text.Split(' ');
+                TagToSearch = split[split.Length - 1];
+            }
         }
-
+        private void SearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                args.Page = 1;
+                StartSearch();
+            }
+        }
+        private void SearchButton_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (!CanSearch)
+            {
+                return;
+            }
+            args.Page = 1;
+            SearchBox.Text += "";
+            StartSearch();
+        }
         private void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
-            SearchTagAutoComplete.Items.Clear();
             this.args.Page = 1;
             StartSearch();
         }
+        private void SortSelection_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!CanSearch)
+            {
+                return;
+            }
+            args.Page = 1;
+            StartSearch();
+        }
+        private void DownloadMultiple_Click(object sender, RoutedEventArgs e)
+        {
+            if (DownloadMultiple.IsChecked.Value)
+            {
+                PostsView.IsItemClickEnabled = false;
+                PostsView.SelectionMode = ListViewSelectionMode.Multiple;
 
+            }
+            else
+            {
+                var list = new List<object>(PostsView.SelectedItems);
+                PostsView.IsItemClickEnabled = true;
+                PostsView.SelectionMode = ListViewSelectionMode.None;
+
+                foreach (var item in list)
+                {
+                    var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                    var page = (MainPage)grid.Parent;
+                    page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = item as Post, FileName = (item as Post).file.md5, FolderName = "" });
+                }
+            }
+
+        }
+        private void LeftNav_Click(object sender, RoutedEventArgs e)
+        {
+            if (!CanSearch)
+            {
+                return;
+            }
+            if (args.Page > 1)
+            {
+                args.Page--;
+                StartSearch();
+            }
+        }
+        private void RightNav_Click(object sender, RoutedEventArgs e)
+        {
+            args.Page++;
+            StartSearch();
+        }
+        private void RecommendButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SettingsHandler.Username == "")
+            {
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("You need to be logged in to use this feature");
+                return;
+            }
+
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var str = (string)localSettings.Values["SeenRecommendInfo"];
+            if (str == null)
+            {
+                localSettings.Values["SeenRecommendInfo"] = "Seen";
+                RecommendedPanel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                PopDayButton.IsChecked = false;
+                PopWeekButton.IsChecked = false;
+                PopMonthButton.IsChecked = false;
+                Thread t = new Thread(GetRecommended);
+                t.Start();
+
+            }
+        }
         private void TagsGridView_ItemClick(object sender, ItemClickEventArgs e)
         {
             string str = e.ClickedItem as string;
@@ -589,25 +655,26 @@ namespace Fluff.Pages
                 SearchBox.Text += $" {str}";
             }
         }
-
-        private void AddTagFavBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
-        {
-            SettingsHandler.FavoriteTags.Add(sender.Text);
-            SettingsHandler.SaveFavsToFile();
-            Bindings.Update();
-            sender.Text = "";
-            AddNewFavButton.Flyout.Hide();
-        }
-
         private void AddTagFavButton_Click(object sender, RoutedEventArgs e)
         {
             SettingsHandler.FavoriteTags.Add(AddTagFavBox.Text);
             SettingsHandler.SaveFavsToFile();
             Bindings.Update();
             AddTagFavBox.Text = "";
-            AddNewFavButton.Flyout.Hide();
+            AddNewTagFlyout.Hide();
         }
-
+        private void AddTagFavBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            SettingsHandler.FavoriteTags.Add(sender.Text);
+            SettingsHandler.SaveFavsToFile();
+            Bindings.Update();
+            sender.Text = "";
+            AddNewTagFlyout.Hide();
+        }
+        private void AddNewTagOnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            (sender as UIElement).ContextFlyout.ShowAt((FrameworkElement)sender);
+        }
         private void FavTagMenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
             if(e.OriginalSource != null)
@@ -619,60 +686,157 @@ namespace Fluff.Pages
             }
         }
 
-        private void PostsView_Loaded(object sender, RoutedEventArgs e)
+        // Helper & Common Code Functions
+        public async void StartSearch()
         {
-            if (args.ClickedPost != null)
+            if (!CanSearch)
             {
-                PostsView.ScrollIntoView(args.ClickedPost, ScrollIntoViewAlignment.Leading);
+                return;
+            }
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+            {
+                SearchBox.IsEnabled = false;
+                SearchProgress.Visibility = Visibility.Visible;
+                SearchButton.IsEnabled = false;
+                SortSelection.IsEnabled = false;
+                LeftNav.IsEnabled = false;
+                RightNav.IsEnabled = false;
+                PageText.Text = args.Page.ToString();
+                PostsViewModel.Clear();
+            });
+            Thread t = new Thread(GetPosts);
+            t.Start(new ObservableCollection<Post>(PostsViewModel));
+        }
+
+        // Swipe Interactions
+        private void PostsView_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+        {
+            if (e.IsInertial && !_isGridSwiped)
+            {
+                var swipedDistance = e.Cumulative.Translation.X;
+
+                if (Math.Abs(swipedDistance) <= 200) return;
+
+                if (swipedDistance < 0)
+                {
+                    try
+                    {
+                        if (PostsViewModel.Count > 0)
+                        {
+                            args.Page++;
+                            StartSearch();
+                        }
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        if (args.Page != 1)
+                        {
+                            args.Page--;
+                            StartSearch();
+                        }
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+                _isGridSwiped = true;
             }
         }
-
-        Post RightTappedPost;
-        private void PostsView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        private void PostsView_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
         {
-            RightTappedPost = (sender as GridViewItem).DataContext as Post;
+            _isGridSwiped = false;
+        }
+        
+        // Feature Introductions Function
+        private void RecommendPanelOkay_Click(object sender, RoutedEventArgs e)
+        {
+            RecommendedPanel.Visibility = Visibility.Collapsed;
+        }
 
-            if(RightTappedPost != null)
+        private void PopDayButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SettingsHandler.Rating == "safe")
             {
-                MenuFlyout flyout = new MenuFlyout();
-                MenuFlyoutItem item1 = new MenuFlyoutItem();
-                item1.Text = "Like Post";
-                item1.Click += LikeTapped;
-                flyout.Items.Add(item1);
-                MenuFlyoutItem item2 = new MenuFlyoutItem();
-                item2.Text = "Dislike Post";
-                item2.Click += DislikeTapped;
-                flyout.Items.Add(item2);
-                MenuFlyoutItem item3 = new MenuFlyoutItem();
-                item3.Text = "Favorite Post";
-                item3.Click += FavTapped;
-                flyout.Items.Add(item3);
-                MenuFlyoutItem item4 = new MenuFlyoutItem();
-                item4.Text = "Download Post";
-                item4.Click += DownloadTapped;
-                flyout.Items.Add(item4);
-                flyout.ShowAt(PostsView, e.GetPosition(PostsView));
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("Can't view in safe mode!");
+                PopDayButton.IsChecked = false;
+                PopWeekButton.IsChecked = false;
+                PopMonthButton.IsChecked = false;
+
+                return;
             }
+            if (PopDayButton.IsChecked.Value)
+            {
+                PopWeekButton.IsChecked = false;
+                PopMonthButton.IsChecked = false;
+                SearchBox.IsEnabled = false;
+            }
+            else
+            {
+                SearchBox.IsEnabled = true;
+            }
+            StartSearch();
+        }
+        private void PopWeekButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SettingsHandler.Rating == "safe")
+            {
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("Can't view in safe mode!");
+                PopDayButton.IsChecked = false;
+                PopWeekButton.IsChecked = false;
+                PopMonthButton.IsChecked = false;
+
+                return;
+            }
+            if (PopWeekButton.IsChecked.Value)
+            {
+                PopDayButton.IsChecked = false;
+                PopMonthButton.IsChecked = false;
+                SearchBox.IsEnabled = false;
+            }
+            else
+            {
+                SearchBox.IsEnabled = true;
+            }
+            StartSearch();
+        }
+        private void PopMonthButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SettingsHandler.Rating == "safe")
+            {
+                var grid = ((Grid)this.Frame.Parent).Parent as Grid;
+                var page = (MainPage)grid.Parent;
+                page.ShowSystemMessage("Can't view in safe mode!");
+                PopDayButton.IsChecked = false;
+                PopWeekButton.IsChecked = false;
+                PopMonthButton.IsChecked = false;
+
+                return;
+            }
+            if (PopMonthButton.IsChecked.Value)
+            {
+                PopDayButton.IsChecked = false;
+                PopWeekButton.IsChecked = false;
+                SearchBox.IsEnabled = false;
+            }
+            else
+            {
+                SearchBox.IsEnabled = true;
+            }
+            StartSearch();
         }
 
-        private void LikeTapped(object sender, RoutedEventArgs e)
-        {
-            host.VotePost(RightTappedPost.id, 1);
-        }
-        private void DislikeTapped(object sender, RoutedEventArgs e)
-        {
-            host.VotePost(RightTappedPost.id, -1);
-        }
-        private void FavTapped(object sender, RoutedEventArgs e)
-        {
-            host.FavoritePost(RightTappedPost.id);
-        }
-        private void DownloadTapped(object sender, RoutedEventArgs e)
-        {
-            var grid = ((Grid)this.Frame.Parent).Parent as Grid;
-            var page = (MainPage)grid.Parent;
-            page.AddItemToQueue(new DownloadQueueItem() { PostToDownload = RightTappedPost, FileName = RightTappedPost.file.md5, FolderName = "" });
-        }
-
+        
     }
 }

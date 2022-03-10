@@ -1,0 +1,77 @@
+﻿<Page
+    x:Class="Fluff.Pages.BlipsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Fluff.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:e6API="using:e6API" xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d">
+
+    <ScrollViewer>
+        <StackPanel>
+            <Border Background="{ThemeResource SystemAltLowColor}"
+                    Grid.Column="1"
+                    Margin="10,10,10,10"
+                    MinHeight="150"
+                    CornerRadius="10">
+                <Grid>
+                    <TextBlock Text="Send Blip:"
+                               FontSize="24"
+                               Margin="10,10,0,0"/>
+                    <TextBox Margin="10,50,100,10"
+                             x:Name="BlipEntryBox"
+                             AcceptsReturn="True"/>
+                    <Button HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Height="90"
+                            x:Name="SendButton"
+                            Click="SendButton_Click"
+                            Width="80"
+                            Margin="0,0,10,10">
+                        <SymbolIcon Symbol="Send"/>
+                    </Button>
+                </Grid>
+            </Border>
+            <muxc:ProgressBar x:Name="LoadProgress"
+                              IsIndeterminate="True"
+                              Margin="20,0,20,0"
+                              Visibility="Visible"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Center"/>
+            <ListView Margin="10"
+                      SelectionMode="None"
+                      ItemsSource="{x:Bind BlipsViewModel}">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="e6API:Blip">
+                        <ListViewItem Padding="0"
+                                      Margin="0,0,0,10">
+                            <Border Background="{ThemeResource SystemChromeLowColor}"
+                                    Grid.Column="1"
+                                    Padding="20,0,0,0"
+                                    MinHeight="150"
+                                    CornerRadius="10">
+                                <StackPanel>
+                                    <TextBlock Grid.Column="0"
+                                               TextTrimming="CharacterEllipsis"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"
+                                               Margin="0,10,0,0"
+                                               Text="{x:Bind creator_name}"/>
+                                    <controls:MarkdownTextBlock Background="Transparent"
+                                                                Grid.Column="1"
+                                                                LinkClicked="MarkdownTextBlock_LinkClicked"
+                                                                Margin="0,10,0,10"
+                                                                Text="{x:Bind body}"
+                                                                ImageMaxHeight="250"
+                                                                FontSize="16"/>
+                                </StackPanel>
+                            </Border>
+                        </ListViewItem>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

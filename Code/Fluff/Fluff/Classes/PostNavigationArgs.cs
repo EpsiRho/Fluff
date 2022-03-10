@@ -15,11 +15,18 @@ namespace Fluff.Classes
     {
         public Post ClickedPost { get; set; }
         public Pool ClickedPool { get; set; }
+        public Set ClickedSet { get; set; }
         public ObservableCollection<Post> PostsList { get; set; }
         public ObservableCollection<Pool> PoolsList { get; set; }
+        public ObservableCollection<Set> SetsList { get; set; }
         public int Page { get; set; }
+        public bool IsSetSearch { get; set; }
         public string Tags { get; set; }
         public int SortOrder { get; set; }
+        public double ScrollPercent { get; set; }
+        public bool IsPopDay { get; set; }
+        public bool IsPopWeek { get; set; }
+        public bool IsPopMonth { get; set; }
     }
 
     public static class PagesStack
