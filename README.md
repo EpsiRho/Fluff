@@ -35,12 +35,12 @@ https://www.microsoft.com/store/apps/9NJRHG6FVKL9
 
     - [x] Add/Remove tags from search
 
-- [ ] Pools
+- [x] Pools
 
-  - [ ] Search Pools
+  - [x] Search Pools
 
-  - [ ] View Pools
-  - [ ] Save Pools
+  - [x] View Pools
+  - [x] Save Pools
 
 - [ ] Wikis
 
@@ -48,20 +48,11 @@ https://www.microsoft.com/store/apps/9NJRHG6FVKL9
 
   - [ ] View Wikis
 
-- [ ] Create
+- [x] Create
 
-  - [ ] Upload posts
-
-  - [ ] Update Posts
+  - [x] Upload posts
 
 - [ ] Follow Tags
 
 - [ ] Similar Image Search
 
-
-
-## ToDo
-
-- [ ] Fix page return past 2
-
-- [ ] 
