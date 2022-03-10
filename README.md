@@ -9,6 +9,11 @@ I'm not throwing away all the code either, it'll just be brought over and fit in
 Lastly, Get it now on the Microsoft Store!
 https://www.microsoft.com/store/apps/9NJRHG6FVKL9
 
+# Screenshots
+![](https://github.com/EpsiRho/Fluff/blob/main/1.png?raw=true)
+![](https://github.com/EpsiRho/Fluff/blob/main/2.png?raw=true)
+![](https://github.com/EpsiRho/Fluff/blob/main/3.png?raw=true)
+
 ## Features
 
 - [x] Search Posts on e621
