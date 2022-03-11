@@ -17,7 +17,7 @@ namespace Fluff.Classes
     /// </summary>
     public static class SettingsHandler
     {
-        public static string UserAgent = "Fluff/0.9 (by EpsilonRho)";
+        public static string UserAgent = "Fluff/0.9.1 (by EpsilonRho)";
         public static string Username { get; set; }
         public static string ApiKey { get; set; }
         public static string Rating { get; set; }

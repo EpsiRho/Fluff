@@ -11,7 +11,7 @@
   <Identity
     Name="63850EpsiRho.FluffFurryArtViewer"
     Publisher="CN=8573DDA1-3882-41F4-801F-A6209429DB0F"
-    Version="0.9.0.0" />
+    Version="0.9.1.0" />
 
   <mp:PhoneIdentity PhoneProductId="17fd60ce-03bb-4bc1-88a8-69bdd4568603" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

@@ -263,19 +263,6 @@ namespace Fluff.Pages
                 tags += $" score:>{minScore}";
             }
 
-            // Get blacklist
-            host.Username = SettingsHandler.Username;
-            host.ApiKey = SettingsHandler.ApiKey;
-            var users = await host.SearchUsers(SettingsHandler.Username, 1);
-            string[] blacklist = users[0].blacklisted_tags.Replace("\r", "").Split("\n");
-            if (blacklist != null)
-            {
-                foreach (string tag in blacklist)
-                {
-                    tags += $" -{tag}";
-                }
-            }
-
             // Get Post Count from slider
             int count = (int)SettingsHandler.PostCount;
 
@@ -284,6 +271,24 @@ namespace Fluff.Pages
             {
                 host.Username = SettingsHandler.Username;
                 host.ApiKey = SettingsHandler.ApiKey;
+
+                // Get blacklist
+                try
+                {
+                    var users = await host.SearchUsers(SettingsHandler.Username, 1);
+                    string[] blacklist = users[0].blacklisted_tags.Replace("\r", "").Split("\n");
+                    if (blacklist != null)
+                    {
+                        foreach (string tag in blacklist)
+                        {
+                            tags += $" -{tag}";
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+
+                }
             }
 
             // Get Posts
